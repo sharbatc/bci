@@ -1,4 +1,4 @@
-function [header, channels, eye_channels, biceps_channels, trigger] = initialize(fName)
+function [header, channels, eye_channels, biceps_channels, cleared_trigger] = initialize(fName)
 
 % load in data
 eeg1 = readbdfheader(fName);
