@@ -11,7 +11,7 @@ stop = stops(trial);
 channels_ = channels(:,start:stop);
 eye_channels_ = eye_channels(:,start:stop);
 biceps_channels_ = biceps_channels(:,start:stop);
-trigger_ = trigger(1,start:stop);
+trigger_ = cleared_trigger(1,start:stop);
 
 sprintf('trial:%i loaded', trial);
 
