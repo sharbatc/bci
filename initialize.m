@@ -9,7 +9,7 @@ channels = signal(1:64,:);
 eye_channels = signal(65:67,:);
 biceps_channels = signal(68:71,:);
 trigger = signal(end,:);
-trigger = clear_trigger(trigger);
+cleared_trigger = clear_trigger(trigger);
 print_trigger_info(cleared_trigger);
 
 

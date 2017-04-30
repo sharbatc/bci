@@ -1,10 +1,10 @@
-function [channels_, eye_channels_, biceps_channels_, trigger_] = slice_trial(trial, channels, eye_channels, biceps_channels, trigger)
+function [channels_, eye_channels_, biceps_channels_, trigger_] = slice_trial(trial, channels, eye_channels, biceps_channels, cleared_trigger)
 % cuts out 1 trial from the recording
 
 assert((1 <= trial) && (trial <= 15), 'trial number should be between 1 and 15');
 
-starts = find(cleaned_trigger==1);
-stops = find(cleaned_trigger==255);
+starts = find(cleared_trigger==1);
+stops = find(cleared_trigger==255);
 start = starts(trial);
 stop = stops(trial);
 

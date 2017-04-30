@@ -1,9 +1,9 @@
-function print_trigger_info(cleaned_trigger)
+function print_trigger_info(cleared_trigger)
 
-starts = find(cleaned_trigger==1);
-missed = find(cleaned_trigger==16);
-passed = find(cleaned_trigger==48);
-stops = find(cleaned_trigger==255);
+starts = find(cleared_trigger==1);
+missed = find(cleared_trigger==16);
+passed = find(cleared_trigger==48);
+stops = find(cleared_trigger==255);
 
 for i = 1:15
     start = starts(i);
