@@ -1,0 +1,31 @@
+Triggers:
+	Specific numbers:
+		1: begin of a trajectory
+		255: end of a trajectory
+	Bit-bound events:		
+		16: change of current waypoint
+		32: whether a waypoint is passed
+		64: assistance (SC) changed, this is for the third session. If you identify this in 1st or 2nd session..., please let me know. That should not happen.
+		
+		An example explaining the concept of bit-bound. 48 = 16 + 32, meaning a waypoint changed (presence of a new waypoint) and the previous waypoint is successfully passed.
+		For the 1st session, you should see thirty-four 'change of waypoint' per trajectory. If not, please let me know.
+
+Conditions:
+	This info can be found in the file "subjectCode_date_ses_1_condition". The second column is the condition. First line is the number of trajectory.
+	Otherwise, you can also find on the names of many other text files, "[...]_cond_0_[...]".
+	1st session:
+		0: easy without assistance
+		1: hard plus assistance
+		2: hard without assistance
+
+Text files:
+	"subjectCode_date_ses_1_condition.txt": first line is the number of trajectory. For the lines below, The 1st column is the index of trajectory. There are 5 different trajectories. The 2nd column is the condition.
+	"[...]_highLvResult.txt": the meaning as can be inferred from the header. The most important for you should be the scored, which means successfully passed a waypoint or not. 1: passed, 0: failed.
+	"[...]_manoeuvreList.txt": not important for you. You can ask if you are really interested to know.
+	"[...]_detailData.txt": this file contains some data recorded by the protocol. You are unlikely to use this at this moment. Extra analysis may be based on this data, but not necessarily based on this. You can ask me for details if you are interested. Note: it obviously has a different sampling rate from the EEG signal.
+	"electodes.txt": the placement and labels of EOG and EMG electodes.
+
+CSV files:
+	"questionaire[...]": self-reported values for the perceived difficulty and indices of NASA-TLX.
+	"comparison[...]": To compute workload, which may be used later, based on NASA-TLX, you will need this file. The idea is to use this file to generate weights of each index of NASA-TLX. As a result, you can linearly sum them all and maps to 0-100. Please refer to the analysis part on the wiki "https://en.wikipedia.org/wiki/NASA-TLX"
+	
