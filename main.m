@@ -12,8 +12,7 @@ clear all;
 %data = save_to_mat(header, channels, eye_channels, biceps_channels, cleared_trigger, saveName);
 
 %% load in data from saved .mat file (struct of structs)
-fName = '/home/bandi/EPFL/BCI/Andras_1.mat';
-load(fName);
+load('Andras_1.mat');
 fprintf('data loaded!')
 
 % description of the data:
@@ -62,26 +61,27 @@ f = Fs*(0:(L/2))/L;
 
 %% plot just as an example
 fourier_before=periodogram(data.t1.channels(48,:));
-fourier_after=periodogram(data.t1.power_spectrum(48,:));
+fourier_after=data.t1.power_spectrum(48,:);
 figure;
 subplot(1,2,1)
-plot(f,log(fourier_before(1:size(f,2),1)))
-xlim([0,70])
+plot(f,log(fourier_before(1:size(f,2),1)));
+%xlim([0,70])
 subplot(1,2,2)
-plot(f,log(fourier_after(1:size(f,2),1)))
-xlim([0,70])
+plot(f,log(fourier_after(1,1:size(f,2))));
+%xlim([0,70])
+
+%%
+figure
+plot(data.t1.channels(48,:))
 
 %%% MISSING
 %% do pca
 
 for i=1:15
-    [data.(trials{i}).pca_coeff,data.(trials{i}).pca_score,data.(trials{i}).pca_var] = apply_pca(data.(trials{i}).power_spectrum);
+    data.(trials{i}).bestindex = apply_pca(data.(trials{i}).power_spectrum);
 end
-
-
 
 %% select best features
 
 %% classify
-
 
