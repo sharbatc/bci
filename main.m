@@ -5,10 +5,12 @@ clc;
 close all;
 clear all;
 
-% load in data
-fName = '/home/bandi/EPFL/BCI/ag2_22032017.bdf'; % Andras' 1st
-%fName = '/home/bandi/EPFL/BCI/ad3_08032017.bdf'; % Sharbat's 1st
-[header, channels, eye_channels, biceps_channels, trigger] = initialize(fName);
+%% load in data from .bdf - uncomment this for the 1st time!
+%fName = '/home/bandi/EPFL/BCI/ag2_22032017.bdf'; % Andras' 1st
+%[header, channels, eye_channels, biceps_channels, cleared_trigger] = initialize(fName);
+%saveName = '/home/bandi/EPFL/BCI/Andras_1.mat';
+%trials = save_to_mat(header, channels, eye_channels, biceps_channels, cleared_trigger, saveName);
 
-trial = 1;  % select trial 1:
-[channels_, eye_channels_, biceps_channels_, trigger_] = slice_trial(trial, channels, eye_channels, biceps_channels, trigger);
+%% load in data from saved .mat file (struct of structs)
+fName = '/home/bandi/EPFL/BCI/Andras_1.mat';
+trials = load(fName);
