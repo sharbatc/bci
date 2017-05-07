@@ -6,7 +6,7 @@ function filtered_trials = filterChannels(matrix_channels)
 %2048 Hz sampling rate
 
 D = designfilt('lowpassiir','FilterOrder',20,'HalfPowerFrequency' ,40,'SampleRate',2048,'DesignMethod','butter');
-filtered_signal = filter(D, matrix_channels); 
+filtered_signal = filter(D, matrix_channels'); 
 
 % % plot filtered signal
 % S = size(matrix_channels,2);
@@ -27,7 +27,7 @@ electrodes = 1:64;
 coordinates = proc_coordinates(chanfile, capsize, laplaciansize, electrodes);
 
 
-[filtered_trials_T, mask, layout] = proc_lap(filtered_signal', coordinates);
+[filtered_trials_T, mask, layout] = proc_lap(filtered_signal, coordinates);
 
 % filtered_trials_T will have the channels as columns
 
