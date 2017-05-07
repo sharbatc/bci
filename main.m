@@ -16,6 +16,11 @@ fName = '/home/bandi/EPFL/BCI/Andras_1.mat';
 load(fName);
 fprintf('data loaded!')
 
+% description of the data:
+%%% struct file named data with one matrix (header - raw data) 15 struct files inside (15 trials). Each
+% trial has 4 matrices, channels, eye_channels, biceps_channels,
+% cleared_trigger, and we can add more to them
+
 %% check correlation
 clc;
 corr_threshold = 0.8;
@@ -46,7 +51,7 @@ fprintf('Filtering done!')
 %% organizing the power plots into matrices (64 channels as rows)
 
 for i=1:15
-    data.(trials{i}).power_spectrum = powerSpect(data.(trials{i}).channels);
+    data.(trials{i}).power_spectrum = powerSpect(data.(trials{i}).filtered_channels);
 end
 
 % defining the frequency range
