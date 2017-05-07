@@ -74,6 +74,12 @@ xlim([0,70])
 %%% MISSING
 %% do pca
 
+for i=1:15
+    [data.(trials{i}).pca_coeff,data.(trials{i}).pca_score,data.(trials{i}).pca_var] = apply_pca(data.(trials{i}).power_spectrum);
+end
+
+
+
 %% select best features
 
 %% classify
