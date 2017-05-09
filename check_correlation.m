@@ -1,5 +1,5 @@
 function [horizontal_corr, vertical_corr] =  check_correlation(channels, eye_channels, threshold)
-% checks the correlation of the channels with EOG (downsampled by 8 first)
+% checks the correlation of the channels with EOG (downsampled EOG by 8 first)
 
 eye_movement_corr = zeros(2,64);  % store results
 left_eye = eye_channels(1,1:8:end);
@@ -8,7 +8,7 @@ right_eye = eye_channels(3,1:8:end);
 horizontal_eye_movement = left_eye-right_eye;
 vertical_eye_movement = nasion - mean([left_eye; right_eye]);
 for i=1:64
-    chan = channels(i,1:8:end);
+    chan = channels(i,:);
     % horizontal eye movement (1st row in eye_movement_corr)
     tmp = corrcoef(chan, horizontal_eye_movement); % 2*2 matrix
     corr_ = tmp(1,2);
