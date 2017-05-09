@@ -14,17 +14,36 @@ clear all;
 %% load in data from saved .mat file (struct of structs)
 fName = '/home/bandi/EPFL/BCI/Andras_1.mat';
 load(fName);
-fprintf('data loaded!')
+Fs = 2048;
+fprintf('data loaded!\n')
 
-% description of the data:
-%%% struct file named data with one matrix (header - raw data) 15 struct files inside (15 trials). Each
-% trial has 4 matrices, channels, eye_channels, biceps_channels,
-% cleared_trigger, and we can add more to them
+% description of the data format:
+% struct (called data) with the original header and 15 structs inside (for each trials).
+% trials have 4 matrices, channels, eye_channels, biceps_channels and cleared_trigger (access like: data.t1.channels)
+% feel free to extend with more fields! (data.* = )
 
-%% check correlation
-clc;
-corr_threshold = 0.8;
+%% downsample EEG channels
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
+for i=1:15
+   data.(trials{i}).channels = data.(trials{i}).channels(:,1:8:end);
+end
+Fs = 2048/8;
+fprintf('EEG downsampled by 8!\n')
+
+%% plot signal before filtering (1st trial 1st channel)
+[pxx_tmp, f_tmp] = calc_PSD(data.t1.channels, Fs);  % calc PSD for the 1st trial just to see how it looks like
+plot_single_channel(data.t1.channels(1,:), f_tmp, pxx_tmp(1,:), Fs)
+
+%% spatial filtering
+% always do spatial filtering first!
+for i=1:15
+   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels);
+end
+fprintf('spatial filtering done!\n')
+
+%% check correlation (with eye movement)
+corr_threshold = 0.8;
+trial_thershold = 10;
 discard_channels = zeros(1,64);
 for i=1:15
     [horizontal_corr, vertical_corr] = check_correlation(data.(trials{i}).channels,...
@@ -32,57 +51,38 @@ for i=1:15
     discard_channels_trial = [horizontal_corr, vertical_corr];  % channels discarded according to this trial
     discard_channels(discard_channels_trial) = discard_channels(discard_channels_trial)+1; % no += 1 :(
 end
-% channels wich have high(er than threshold) correlation in (at least) half of the trials
-discard = find(discard_channels > 7)  
+% channels wich have high(er than 'corr_threshold') correlation in (at least) 'trial_threshold' trials
+discard = find(discard_channels > trial_thershold);
+fprintf('%i channels discarded from analysis, because of high correlation!\n',size(discard,2));
 
 
-%% filter each channel
-fprintf('Begin filtering...')
-
-trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'};
-
+%% temporal filtering (this takes some time...)
 for i=1:15
-    data.(trials{i}).filtered_channels = filterChannels(data.(trials{i}).channels);
+   data.(trials{i}).channels = temporal_filter(data.(trials{i}).channels,Fs);
 end
-% we should also filter EOG and EMG
+fprintf('temporal filtering done!\n')
 
-fprintf('Filtering done!')
- 
-%% organizing the power plots into matrices (64 channels as rows)
-
+%% calc PSD
 for i=1:15
-    data.(trials{i}).power_spectrum = powerSpect(data.(trials{i}).filtered_channels);
+   [data.(trials{i}).pxx, data.(trials{i}).f] = calc_PSD(data.(trials{i}).channels,Fs);
 end
+fprintf('PSD calculated!\n')
 
-% defining the frequency range
-S = size(data.t1.channels);
-L = S(2);
-Fs = 2048;
-f = Fs*(0:(L/2))/L;
+%% plot filtered signal (1st trial 1st channel)
+plot_single_channel(data.t1.channels(1,:), data.t1.f,...
+                    data.t1.pxx(1,:), Fs)
 
-%% plot just as an example
-fourier_before=periodogram(data.t1.channels(48,:));
-fourier_after=data.t1.power_spectrum(48,:);
-figure;
-subplot(1,2,1)
-plot(f,log(fourier_before(1:size(f,2),1)));
-%xlim([0,70])
-subplot(1,2,2)
-plot(f,log(fourier_after(1,1:size(f,2))));
-%xlim([0,70])
 
-%%
-figure
-plot(data.t1.channels(48,:))
-
-%%% MISSING
-%% do pca
-
+% ===================================== #TODO =====================================
+%% PCA (just for transforming the feutures, no dim. reduction)
 for i=1:15
-    data.(trials{i}).bestindex = apply_pca(data.(trials{i}).power_spectrum);
+    data.(trials{i}).bestindex = apply_pca(data.(trials{i}).power_spectrum);  % double check this!
 end
 
-%% select best features
+%% feature selection
+% features are the PSDs of the channels (data.t*.pxx)
+% eg. see Data Analysis class codes
 
 %% classify
+% ... yup ...
 
