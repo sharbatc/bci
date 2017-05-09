@@ -14,7 +14,6 @@ clear all;
 %% load in data from saved .mat file (struct of structs)
 fName = '/home/bandi/EPFL/BCI/Andras_1.mat';
 load(fName);
-fprintf('data loaded!')
 
 %% check correlation
 clc;
