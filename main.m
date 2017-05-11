@@ -1,5 +1,5 @@
 % main file for BCI project #ames !
-% last update: 10/05 - András
+% last update: 10/05 - Andr??s
 
 clc;
 close all;
@@ -12,7 +12,7 @@ clear all;
 %data = save_to_mat(header, channels, eye_channels, biceps_channels, cleared_trigger, saveName);
 
 %% load in data from saved .mat file (struct of structs)
-fName = '/home/bandi/EPFL/BCI/Andras_1.mat';
+fName = 'Andras_1.mat';
 load(fName);
 Fs = 2048;
 fprintf('data loaded!\n')
@@ -27,7 +27,7 @@ trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't
 for i=1:15
    data.(trials{i}).channels = data.(trials{i}).channels(:,1:8:end);
 end
-Fs = 2048/8;
+Fs = Fs/8;
 fprintf('EEG downsampled by 8!\n')
 
 %% plot signal before filtering (1st trial)
