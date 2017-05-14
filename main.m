@@ -17,7 +17,7 @@ mac = 1; % flag for ICA -> change this to 1 on mac!
 %fName = '/home/bandi/EPFL/BCI/ad10_13032017.bdf'; % Mariana's 1st
 %labels = [0,2,0,0,2,0,2,2,1,1,1,1,2,1,0]; % Mariana's 1st
 name = 'Sharbat';
-fName = '/home/bandi/EPFL/BCI/ad3_08032017.bdf'; % Sharbat's 1st
+fName = '/Users/marianafalcao/Desktop/erasmus cadeiras/Brain-Computer Interaction/project/Measurments/ad10_13032017/ad10_13032017.bdf'; % Sharbat's 1st
 labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2]; % Sharbat's 1st
 %name = 'Andras';
 %fName = '/home/bandi/EPFL/BCI/ag2_22032017.bdf'; % Andras' 1st
@@ -27,7 +27,7 @@ Fs = 2048;
 
 %% load in data from .bdf - use this for the 1st time!
 [header, channels, eye_channels, biceps_channels, cleared_trigger] = initialize(fName);
-saveName = sprintf('/home/bandi/EPFL/BCI/%s_1.mat',name);
+saveName = sprintf('/Users/marianafalcao/Desktop/erasmus cadeiras/Brain-Computer Interaction/project/Measurments/%s_1.mat',name);
 data = save_to_mat(header, labels, channels, eye_channels, biceps_channels, cleared_trigger, saveName);
 fprintf('data initialized and saved to .mat file!\n')
 
@@ -40,7 +40,7 @@ close all;
 mac = 1; % flag for ICA -> change this to 1 on mac!
 
 name = 'Andras';
-fName = sprintf('%s_1.mat',name);
+fName = sprintf('/Users/marianafalcao/Desktop/erasmus cadeiras/Brain-Computer Interaction/project/Measurments/bdf files/%s_1.mat',name);
 load(fName);
 Fs = 2048;
 fprintf('data loaded!\n')
@@ -84,6 +84,7 @@ if mac == 0 % delete generated (random) binary files on linux
     delete 'bias_after_adjust'
 end
 fprintf('ICA done!\n')
+
 
 
 %% check correlation (with eye movement)
