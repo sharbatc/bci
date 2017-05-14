@@ -10,5 +10,5 @@ for c=1:length(classes)
 end
 
 err = mean(err_);
-end
 
+end
