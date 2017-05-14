@@ -112,8 +112,19 @@ fName = sprintf('%s_1_preprocessed.mat',name);
 save(fName, 'data');
 
 
+%% load in preprocessed dataset!
+clc;
+clear;
+close all;
+name = 'Sharbat';
+fName = sprintf('%s_1_preprocessed.mat',name);
+load(fName);
+trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
+Fs = 256;
+
 %% create feature matrix == calc PSDs
 % note: hard coded for 1sec epoching!
+
 
 labels = [];  % will be a column vector; size: 15 * lenght trial (in sec)
 features = [];  % feature matrix; size: size(labels,1) * (64*size(pxx,2))
@@ -126,10 +137,16 @@ for i=1:15  % iterates over trials
         % calc PSD
         [pxx,f]  = calc_PSD(data.(trials{i}).channels(:,(k*Fs)+1:(k+1)*Fs),Fs);
         % cut pxx at 50Hz
-        pxx = pxx(:,find(f<50))';  % transponent is needed for the next step! stupid MATLAB...
-        % make a flat vector from 64*25 pxx matrix and extend feature matrix with a new row
-        features = [features; pxx(:)'];
+        pxx = pxx(:,find(f<50));
+        % make a flat vector from 64*50 pxx matrix and extend feature matrix with a new row
+        features = [features; reshape(pxx.',1,[])];
     end 
+end
+% discard all -Infs (some values, for the 0Hz freq. of PSD)
+[rows, cols] = find(features == -Inf);
+if isempty(rows) == 0
+    labels(rows,:) = [];
+    features(rows,:) = [];
 end
 % save corresponding frequencies (at least once)
 f = f(1,find(f<50));
@@ -140,20 +157,32 @@ save(fName,'labels','features');
 fprintf('feature matrix saved!\n')
 
 
-
-
 %% ===================================== #TODO =====================================
+% load in feature matrix (and corresponding labels)
+clc;
+clear;
+close all;
+name = 'Andras';
 fName = sprintf('%s_1_ML.mat',name);
 load(fName);
+% replace 2s with 1s in labels
+labels(labels == 2) = 1;
+
+%% plot out PSD...
+% plots 10 random easy and 10 random hard trial PSDs for the same electrodes
+f = linspace(0,49,50); % this should be the same as data.f (if you don't change PSD window size, this should do it!)
+plot_PSD(labels, features, f, name)
+
+% close all;
+
+%% Fisher's score:
+[orderedPower, orderedInd] = fisher_rankfeat(features, labels);
+disc = plot_fisher(orderedPower, orderedInd, name);
 
 %% PCA (just for transforming the feutures, no dim. reduction) / or just leave this out...
 for i=1:15
     data.(trials{i}).bestindex = apply_pca(data.(trials{i}).power_spectrum);  % double check this!
 end
-
-%% feature selection
-% features are the PSDs of the channels (data.t*.pxx)
-% eg. see Data Analysis class codes
 
 %% classify
 % ... yup ...
