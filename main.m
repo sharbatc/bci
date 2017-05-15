@@ -27,7 +27,7 @@ Fs = 2048;
 
 %% load in data from .bdf - use this for the 1st time!
 [header, channels, eye_channels, biceps_channels, cleared_trigger] = initialize(fName);
-saveName = sprintf('/home/bandi/EPFL/BCI/%s_1.mat',name);
+saveName = sprintf('%s_1.mat',name);
 data = save_to_mat(header, labels, channels, eye_channels, biceps_channels, cleared_trigger, saveName);
 fprintf('data initialized and saved to .mat file!\n')
 
