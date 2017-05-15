@@ -16,12 +16,12 @@ mac = 1; % flag for ICA -> change this to 1 on mac!
 %name = 'Mariana';
 %fName = '/home/bandi/EPFL/BCI/ad10_13032017.bdf'; % Mariana's 1st
 %labels = [0,2,0,0,2,0,2,2,1,1,1,1,2,1,0]; % Mariana's 1st
-name = 'Sharbat';
-fName = '/home/bandi/EPFL/BCI/ad3_08032017.bdf'; % Sharbat's 1st
-labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2]; % Sharbat's 1st
-%name = 'Andras';
-%fName = '/home/bandi/EPFL/BCI/ag2_22032017.bdf'; % Andras' 1st
-%labels = [0,2,0,1,2,2,0,0,0,1,1,1,2,2,1]; % Andras' 1st
+%name = 'Sharbat';
+%fName = '/home/bandi/EPFL/BCI/ad3_08032017.bdf'; % Sharbat's 1st
+%labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2]; % Sharbat's 1st
+name = 'Andras';
+fName = '/home/bandi/EPFL/BCI/ag2_22032017.bdf'; % Andras' 1st
+labels = [0,2,0,1,2,2,0,0,0,1,1,1,2,2,1]; % Andras' 1st
 
 Fs = 2048;
 
@@ -39,7 +39,7 @@ close all;
 
 mac = 1; % flag for ICA -> change this to 1 on mac!
 
-name = 'Andras';
+name = 'Sharbat';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -69,9 +69,16 @@ end
 fprintf('spatial filtering done!\n')
 
 
+%% temporal filtering
+% this takes some time... (but way less than ICA eg.).
+for i=1:15
+   data.(trials{i}).channels = temporal_filter(data.(trials{i}).channels,Fs);
+end
+fprintf('temporal filtering done!\n')
+
+
 %% apply ICA  (first start eeglab from matlab consol...)
 % it's pretty slow and prints a lot!
-
 
 for i=1:15
    % calculate weight matrix
@@ -82,6 +89,7 @@ end
 if mac == 0 % delete generated (random) binary files on linux
     delete 'binica*'
     delete 'bias_after_adjust'
+    delete 'temp.*'
 end
 fprintf('ICA done!\n')
 
@@ -103,18 +111,10 @@ data.discard = find(discard_channels > trial_thershold);
 fprintf('%i channels discarded from analysis, because of high correlation!\n',size(data.discard,2));
 
 
-%% temporal filtering
-% this takes some time... (but way less than ICA eg.).
-for i=1:15
-   data.(trials{i}).channels = temporal_filter(data.(trials{i}).channels,Fs);
-end
-fprintf('temporal filtering done!\n')
-
-
 %% save preprocessed dataset!
-% fName = sprintf('%s_1_preprocessed_by_ely.mat',name);
-% save(fName, 'data');
-% 
+fName = sprintf('%s_1_preprocessed.mat',name);
+save(fName, 'data');
+
 
 %% load in preprocessed dataset!
 clc;
@@ -165,13 +165,13 @@ fprintf('feature matrix saved!\n')
 clc;
 clear;
 close all;
-name = 'Andras';
+name = 'Sharbat';
 fName = sprintf('%s_1_ML.mat',name);
 load(fName);
 % replace 2s with 1s in labels
 labels(labels == 2) = 1;
 
-%% plot out PSD...
+%% plot PSD...
 % plots 10 random easy and 10 random hard trial PSDs for the same electrodes
 f = linspace(0,49,50); % this should be the same as data.f (if you don't change PSD window size, this should do it!)
 plot_PSD(labels, features, f, name)
@@ -181,9 +181,7 @@ plot_PSD(labels, features, f, name)
 %% Fisher's score:
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, name);
-=======
-% fName = sprintf('%s_1_ML.mat',name);
-% load(fName);
+
 
 %% PCA (just for transforming the features, no dim. reduction) / or just leave this out...
 % trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...

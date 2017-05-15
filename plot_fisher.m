@@ -9,10 +9,11 @@ tmp(orderedInd) = orderedPower;
 disc = reshape(tmp,[],64)';
 
 figure;
+set(gcf,'units','points','position',[100,100,1000,800])
 imagesc(disc);
-title('Fisher score')
-xlabel('PSD - Freq (Hz)')
-ylabel('electrode')
+title(sprintf('%s: Fisher score', name));
+xlabel('PSD - Freq (Hz)');
+ylabel('electrode');
 colorbar;
 
 fName = sprintf('pictures/%s_disc.png',name);
