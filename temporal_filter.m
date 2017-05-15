@@ -6,6 +6,6 @@ D = designfilt('bandpassiir','FilterOrder',20,...
                'HalfPowerFrequency1',0.001,'HalfPowerFrequency2',50,...
                'SampleRate',Fs,'DesignMethod','butter');
 
-filtered_channels = filtfilt(D,channels);
+filtered_channels = filter(D,channels);
 
 end
