@@ -15,7 +15,7 @@ for iFeature = 1:nFeature
         n_j(jClass) = sum(label == classLabels(jClass));
         u_ij(jClass) = mean(data(label == classLabels(jClass),iFeature));
         sigma_ij(jClass) = var(data(label == classLabels(jClass),iFeature));
-    end
+	end
 	S(iFeature) = sum(n_j.*(u_ij-u_i(iFeature)).^2)/sum(n_j.*sigma_ij);
 end
 

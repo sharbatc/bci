@@ -118,6 +118,7 @@ Fs = 256;
 
 labels = [];  % will be a column vector; size: 15 * lenght trial (in sec)
 features = [];  % feature matrix; size: size(labels,1) * (64*size(pxx,2))
+<<<<<<< HEAD
 power = [];
 power_delta = [];
 power_theta = [];
@@ -126,6 +127,7 @@ power_low_beta = [];
 power_high_beta = [];
 power_gamma = [];
 
+areas = [];
 pos=1;
 for i=1:15  % iterates over trials 
     len_trial = floor(size(data.(trials{i}).channels,2)/Fs);
@@ -165,6 +167,7 @@ for i=1:15  % iterates over trials
         %gamma (30?45 Hz) 
         pxx2 = pxx(:,find(f>=30 & f<40));
         power_gamma = [power_gamma; trapz(pxx2')];
+        areas = [areas; trapz(pxx')];
 
     end 
     
@@ -280,6 +283,7 @@ end
 legend('easy','medium','hard')
 
 %% ~ Fisher's score:
+<<<<<<< HEAD
 [orderedPower, orderedInd] = fisher_rankfeat(power, labels);
 disc = plot_fisher(orderedPower, orderedInd, name);
 
@@ -304,6 +308,20 @@ title('areas fisher scores');
 %"increasing task difficulty led to right-parietal and posttemporal alpha
 %acceleration for all tasks"
 %Increasing alpha power
+[orderedPower, orderedInd] = fisher_rankfeat(areas, labels);
+disc = plot_fisher(orderedPower, orderedInd, name);
+
+%% ~ Plot topographic map of Fisher's score
+A = imread('head.png');
+image(A)
+N=64;
+ch = [X,Y];
+%[z,map]=eegplot(mag,ch,unorm,ch_disp,method,color_res)
+eegplot(orderedPower',ch,[],[],[],[]);
+% figure;
+% imshow(brain);
+
+
 %% save dataset (ready to do machine learning stuffs)
 fName = sprintf('%s_1_ML.mat',name);
 save(fName,'labels','features');

@@ -15,7 +15,7 @@ rnd_sample_hard = datasample(idx_hard, 10, 'Replace', false);
 rnd_features_hard = features(rnd_sample_hard,:);
 
 for c=0:63  % iterates over every channel (1 figure will be saved for all channels)
-	figure;
+	figure('visible', 'off');
     set(gcf,'units','points','position',[100,100,1000,800])
 	pxx_easy = rnd_features_easy(:,(c*len_PSD)+1:(c+1)*len_PSD);
     pxx_hard = rnd_features_hard(:,(c*len_PSD)+1:(c+1)*len_PSD);
