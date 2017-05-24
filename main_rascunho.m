@@ -118,7 +118,14 @@ Fs = 256;
 
 labels = [];  % will be a column vector; size: 15 * lenght trial (in sec)
 features = [];  % feature matrix; size: size(labels,1) * (64*size(pxx,2))
-areas = [];
+power = [];
+power_delta = [];
+power_theta = [];
+power_alpha = [];
+power_low_beta = [];
+power_high_beta = [];
+power_gamma = [];
+
 pos=1;
 for i=1:15  % iterates over trials 
     len_trial = floor(size(data.(trials{i}).channels,2)/Fs);
@@ -133,11 +140,43 @@ for i=1:15  % iterates over trials
         pxx = pxx(:,find(f<40));
         % make a flat vector from 64*50 pxx matrix and extend feature matrix with a new row
         features = [features; reshape(pxx.',1,[])];
-        areas = [areas; trapz(pxx')];
+        power = [power; trapz(pxx')];
+    
+        %delta (2?4 Hz)
+        pxx2 = pxx(:,find(f>=2 & f<=4));
+        power_delta = [power_delta; trapz(pxx2')];
+
+        %theta (4?8 Hz),
+        pxx2 = pxx(:,find(f>=4 & f<=8));
+        power_theta = [power_theta; trapz(pxx2')];
+
+        %alpha (8?13 Hz), 
+        pxx2 = pxx(:,find(f>=8 & f<=13));
+        power_alpha = [power_alpha; trapz(pxx2')];
+
+        %low beta (13?18 Hz), 
+        pxx2 = pxx(:,find(f>=13 & f<=18));
+        power_low_beta = [power_low_beta; trapz(pxx2')];
+
+        %high beta (18?30 Hz),
+        pxx2 = pxx(:,find(f>=18 & f<=30));
+        power_high_beta = [power_high_beta; trapz(pxx2')];
+
+        %gamma (30?45 Hz) 
+        pxx2 = pxx(:,find(f>=30 & f<40));
+        power_gamma = [power_gamma; trapz(pxx2')];
 
     end 
     
 end
+
+%Relative powers
+rel_power_delta = power_delta./power;
+rel_power_alpha = power_alpha./power;
+rel_power_theta = power_theta./power;
+rel_power_low_beta = power_low_beta./power;
+rel_power_high_beta = power_high_beta./power;
+rel_power_gamma = power_gamma./power;
 
 
 % structure of the feature matrix:
@@ -241,19 +280,30 @@ end
 legend('easy','medium','hard')
 
 %% ~ Fisher's score:
-[orderedPower, orderedInd] = fisher_rankfeat(areas, labels);
+[orderedPower, orderedInd] = fisher_rankfeat(power, labels);
 disc = plot_fisher(orderedPower, orderedInd, name);
 
+scores = [];
+for i=1:length(orderedPower)
+   scores(i) = orderedPower(find(orderedInd ==i));
+end
 %% ~ Plot topographic map of Fisher's score
-A = imread('head.png');
-image(A)
+%A = imread('head.png');
+%image(A)
+A = textread('coord.txt', '%f');
+X = A(1:2:end);
+Y = A(2:2:end);
 N=64;
 ch = [X,Y];
-%[z,map]=eegplot(mag,ch,unorm,ch_disp,method,color_res)
-eegplot(orderedPower',ch,[],[],[],[]);
+addpath(['./eegplot/eegplot']);
+eegplot(scores',ch,[],[],[],[]);
+title('areas fisher scores');
 % figure;
 % imshow(brain);
 
+%"increasing task difficulty led to right-parietal and posttemporal alpha
+%acceleration for all tasks"
+%Increasing alpha power
 %% save dataset (ready to do machine learning stuffs)
 fName = sprintf('%s_1_ML.mat',name);
 save(fName,'labels','features');
@@ -277,9 +327,9 @@ load(fName);
 
 %% partition
 cp = cvpartition(labels, 'kfold', 5);
-train_features = areas(cp.training(1), :);
+train_features = power_delta(cp.training(1), :);
 train_labels = labels(cp.training(1),:);
-test_features = areas(cp.test(1),:);
+test_features = power_delta(cp.test(1),:);
 test_labels = labels(cp.test(1),:);
 
 %% NOT USE - this is disgusting
@@ -335,7 +385,7 @@ test_err = [test_err classerror(test_res, test_labels)];
 
 %% Support vector machine (with CV)
 t = templateSVM('Standardize',1)
-Mdl = fitcecoc(areas,labels, 'Learners',t) 
+Mdl = fitcecoc(power,labels, 'Learners',t) 
 CVMdl = crossval(Mdl);
 oosLoss = kfoldLoss(CVMdl) % classification error
 
