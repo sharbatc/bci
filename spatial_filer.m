@@ -14,7 +14,6 @@ switch method
 
         coordinates = proc_coordinates(chanfile, capsize, laplaciansize, electrodes);
         [filtered_channels_T, mask, layout] = proc_lap(channels', coordinates);
-
         % transpose output to get back the same structure (channels as rows)
         filtered_channels = filtered_channels_T';
 end
