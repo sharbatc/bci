@@ -13,6 +13,7 @@ band_powers = disc_tmp(end-(64*7)+1:end); % 7 is hard coded for 1+6diff bands (s
 disc = [reshape(pxx,[],64)', reshape(band_powers,7,64)'];
 
 figure;
+colormap jet;
 imagesc(disc);
 title(sprintf('%s: Fisher score', name));
 xlabel('features');
