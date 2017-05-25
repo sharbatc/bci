@@ -3,17 +3,21 @@ function disc = plot_fisher(orderedPower, orderedInd, name)
 % organize features into a matrix again -> 64*size(PSD) matrix
 
 % init an empty vector and fill in with the values
-tmp = zeros(1, size(orderedInd, 2));
-tmp(orderedInd) = orderedPower;
-% reshape matrix
-disc = reshape(tmp,[],64)';
+n = size(orderedInd, 2);
+disc_tmp = zeros(1, n);
+disc_tmp(orderedInd) = orderedPower;
+% reshape matrix (it's a bit messy...)
+pxx = disc_tmp(1:end-(64*7)); % 7 is hard coded for 1+6diff bands (see calc_powers.m)
+band_powers = disc_tmp(end-(64*7)+1:end); % 7 is hard coded for 1+6diff bands (see calc_powers.m)
+
+disc = [reshape(pxx,[],64)', reshape(band_powers,7,64)'];
 
 figure;
 set(gcf,'units','points','position',[100,100,1000,800])
 imagesc(disc);
 title(sprintf('%s: Fisher score', name));
-xlabel('PSD - Freq (Hz)');
-ylabel('electrode');
+xlabel('features');
+ylabel('electrodes');
 colorbar;
 
 fName = sprintf('pictures/%s_disc.png',name);

@@ -1,5 +1,5 @@
 % main file for BCI project #ames !
-% last update: 10/05 - Andras
+% last update: 25/05 - Andras
 
 %% Use this always =)
 
@@ -39,7 +39,7 @@ close all;
 
 mac = 1; % flag for ICA -> change this to 1 on mac!
 
-name = 'Sharbat';
+name = 'Andras';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -120,17 +120,17 @@ save(fName, 'data');
 clc;
 clear;
 close all;
-name = 'Sharbat';
+name = 'Andras';
 fName = sprintf('%s_1_preprocessed.mat',name);
 load(fName);
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
 Fs = 256;
 
-%% create feature matrix == calc PSDs
+%% create feature matrix == calc PSDs (+ integral of PSD)
 % note: hard coded for 1sec epoching!
 
 labels = [];  % will be a column vector; size: 15 * lenght trial (in sec)
-features = [];  % feature matrix; size: size(labels,1) * (64*size(pxx,2))
+features = [];  % feature matrix; size: size(labels,1) * (64*size(pxx,2)+64*7)
 
 for i=1:15  % iterates over trials
     len_trial = floor(size(data.(trials{i}).channels,2)/Fs);
@@ -141,16 +141,20 @@ for i=1:15  % iterates over trials
         [pxx,f]  = calc_PSD(data.(trials{i}).channels(:,(k*Fs)+1:(k+1)*Fs),Fs);
         % cut pxx at 50Hz
         pxx = pxx(:,find(f<50));
-        % make a flat vector from 64*50 pxx matrix and extend feature matrix with a new row
-        features = [features; reshape(pxx.',1,[])];
+        % calculate abs.power (integral of PSD curve) relative powers of given freq bands
+        relative_powers = calc_powers(f, pxx);
+        % make a flat vector from 64*50 pxx matrix, add powers (64*7 more features)
+        features = [features; reshape(pxx.',1,[]), reshape(relative_powers.',1,[])];
     end 
 end
+
 % discard all -Infs (some values, for the 0Hz freq. of PSD)
 [rows, cols] = find(features == -Inf);
 if isempty(rows) == 0
     labels(rows,:) = [];
     features(rows,:) = [];
 end
+
 % save corresponding frequencies (at least once)
 f = f(1,find(f<50));
 data.f = f;
@@ -165,16 +169,18 @@ fprintf('feature matrix saved!\n')
 clc;
 clear;
 close all;
-name = 'Sharbat';
+name = 'Andras';
 fName = sprintf('%s_1_ML.mat',name);
 load(fName);
 % replace 2s with 1s in labels
 labels(labels == 2) = 1;
 
+
 %% plot PSD...
 % plots 10 random easy and 10 random hard trial PSDs for the same electrodes
 f = linspace(0,49,50); % this should be the same as data.f (if you don't change PSD window size, this should do it!)
-plot_PSD(labels, features, f, name)
+features_PSD = features(:,1:end-(64*7)); % 7 is hard coded for 1+6diff bands (see calc_powers.m)
+plot_PSD(labels, features_PSD, f, name)
 
 % close all;
 
