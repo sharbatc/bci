@@ -64,7 +64,7 @@ fprintf('EEG downsampled by %i!\n',down_)
 %% spatial filtering
 % always do spatial filtering first!
 for i=1:15
-   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels);
+   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'Laplacian');
 end
 fprintf('spatial filtering done!\n')
 
