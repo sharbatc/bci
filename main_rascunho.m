@@ -138,47 +138,47 @@ for i=1:15  % iterates over trials
         % calc PSD
         [pxx,f]  = calc_PSD(data.(trials{i}).channels(:,(k*Fs)+1:(k+1)*Fs),Fs);
         % cut pxx at 50Hz
-        pxx = pxx(:,find(f<40));
+        pxx = pxx(:,find(f<50));
         % make a flat vector from 64*50 pxx matrix and extend feature matrix with a new row
         features = [features; reshape(pxx.',1,[])];
         power = [power; trapz(pxx')];
-    
-        %delta (2?4 Hz)
-        pxx2 = pxx(:,find(f>=2 & f<=4));
-        power_delta = [power_delta; trapz(pxx2')];
-
-        %theta (4?8 Hz),
-        pxx2 = pxx(:,find(f>=4 & f<=8));
-        power_theta = [power_theta; trapz(pxx2')];
-
-        %alpha (8?13 Hz), 
-        pxx2 = pxx(:,find(f>=8 & f<=13));
-        power_alpha = [power_alpha; trapz(pxx2')];
-
-        %low beta (13?18 Hz), 
-        pxx2 = pxx(:,find(f>=13 & f<=18));
-        power_low_beta = [power_low_beta; trapz(pxx2')];
-
-        %high beta (18?30 Hz),
-        pxx2 = pxx(:,find(f>=18 & f<=30));
-        power_high_beta = [power_high_beta; trapz(pxx2')];
-
-        %gamma (30?45 Hz) 
-        pxx2 = pxx(:,find(f>=30 & f<40));
-        power_gamma = [power_gamma; trapz(pxx2')];
+%     
+%         %delta (2?4 Hz)
+%         pxx2 = pxx(:,find(f>=2 & f<=4));
+%         power_delta = [power_delta; trapz(pxx2')];
+% 
+%         %theta (4?8 Hz),
+%         pxx2 = pxx(:,find(f>=4 & f<=8));
+%         power_theta = [power_theta; trapz(pxx2')];
+% 
+%         %alpha (8?13 Hz), 
+%         pxx2 = pxx(:,find(f>=8 & f<=13));
+%         power_alpha = [power_alpha; trapz(pxx2')];
+% 
+%         %low beta (13?18 Hz), 
+%         pxx2 = pxx(:,find(f>=13 & f<=18));
+%         power_low_beta = [power_low_beta; trapz(pxx2')];
+% 
+%         %high beta (18?30 Hz),
+%         pxx2 = pxx(:,find(f>=18 & f<=30));
+%         power_high_beta = [power_high_beta; trapz(pxx2')];
+% 
+%         %gamma (30?45 Hz) 
+%         pxx2 = pxx(:,find(f>=30 & f<40));
+%         power_gamma = [power_gamma; trapz(pxx2')];
 
     end 
     
 end
 
 %Relative powers
-rel_power_delta = power_delta./power;
-rel_power_alpha = power_alpha./power;
-rel_power_theta = power_theta./power;
-rel_power_low_beta = power_low_beta./power;
-rel_power_high_beta = power_high_beta./power;
-rel_power_gamma = power_gamma./power;
-
+% rel_power_delta = power_delta./power;
+% rel_power_alpha = power_alpha./power;
+% rel_power_theta = power_theta./power;
+% rel_power_low_beta = power_low_beta./power;
+% rel_power_high_beta = power_high_beta./power;
+% rel_power_gamma = power_gamma./power;
+% 
 
 % structure of the feature matrix:
 %                   channel 1           | channel 2           |...
@@ -288,35 +288,45 @@ scores = [];
 for i=1:length(orderedPower)
    scores(i) = orderedPower(find(orderedInd ==i));
 end
-%% ~ Plot topographic map of Fisher's score
-%A = imread('head.png');
-%image(A)
-A = textread('coord.txt', '%f');
-X = A(1:2:end);
-Y = A(2:2:end);
-N=64;
-ch = [X,Y];
-addpath(['./eegplot/eegplot']);
-eegplot(scores',ch,[],[],[],[]);
-title('areas fisher scores');
-% figure;
-% imshow(brain);
+
 
 %"increasing task difficulty led to right-parietal and posttemporal alpha
 %acceleration for all tasks"
 %Increasing alpha power
-[orderedPower, orderedInd] = fisher_rankfeat(areas, labels);
-disc = plot_fisher(orderedPower, orderedInd, name);
+
 
 %% ~ Plot topographic map of Fisher's score
-A = imread('head.png');
-image(A)
-N=64;
-ch = [X,Y];
-%[z,map]=eegplot(mag,ch,unorm,ch_disp,method,color_res)
-eegplot(orderedPower',ch,[],[],[],[]);
-% figure;
-% imshow(brain);
+
+addpath(['./eeglab14_1_0b/functions/sigprocfunc']);
+addpath(['./eeglab14_1_0b/functions/guifunc']);
+addpath(['./eeglab14_1_0b/functions/adminfunc']);
+
+
+power0=[];
+power1=[];
+power2=[];
+for i=1:length(labels)
+    if labels(i) == 0
+        power0 = [power0; power(i,:)];
+    elseif labels(i) == 1
+        power1 = [power1; power(i,:)];
+    elseif labels(i) == 2
+        power2 = [power2; power(i,:)];
+    end
+end
+
+figure
+topoplot(mean(power0), 'eeglab_chan64_2.elp');
+title('Easy');
+
+figure
+topoplot(mean(power1), 'eeglab_chan64_2.elp');
+title('Hard with assistance');
+
+figure
+topoplot(mean(power2), 'eeglab_chan64_2.elp');
+title('Hard');
+
 
 
 %% save dataset (ready to do machine learning stuffs)
