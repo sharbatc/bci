@@ -33,7 +33,7 @@ for c=0:63  % iterates over every channel (1 figure will be saved for all channe
     xlabel('freq (Hz)');
     xlim([0,49]);
     ylabel('pxx (dB)');
-    fName = sprintf('pictures/%s_el_%i.png',name,c+1);
+    fName = sprintf('pictures/PSD/%s_el_%i.png',name,c+1);
 	saveas(gcf, fName)
 end
 
