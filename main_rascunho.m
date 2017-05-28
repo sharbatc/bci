@@ -401,12 +401,20 @@ test_res = predict(Mdl, test_features);
 test_err = [test_err classerror(test_res, test_labels)];
 
 
+%% Cross-validation
+
+positive_rates=doCrossValidation (labels, areas);
+
+plotPositiveRates(positive_rates);
+
+auc = calculateAUC(positive_rates);
+
 
 %% Support vector machine (with CV)
-t = templateSVM('Standardize',1)
-Mdl = fitcecoc(power,labels, 'Learners',t) 
-CVMdl = crossval(Mdl);
-oosLoss = kfoldLoss(CVMdl) % classification error
+%t = templateSVM('Standardize',1)
+%Mdl = fitcecoc(power,labels, 'Learners',t) 
+%CVMdl = crossval(Mdl);
+%oosLoss = kfoldLoss(CVMdl) % classification error
 
 
 
