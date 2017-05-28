@@ -39,7 +39,7 @@ close all;
 
 mac = 1; % flag for ICA -> change this to 1 on mac!
 
-name = 'Andras';
+name = 'Mariana';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -123,7 +123,7 @@ save(fName, 'data');
 clc;
 clear;
 close all;
-name = 'Andras';
+name = 'Mariana';
 fName = sprintf('%s_1_preprocessed.mat',name);
 load(fName);
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
@@ -167,12 +167,13 @@ save(fName,'labels','features');
 fprintf('feature matrix saved!\n')
 
 
-%% ===================================== #TODO =====================================
-% load in feature matrix (and corresponding labels)
+%% ==================== Machine learning from here ====================
+
+%% load in feature matrix (and corresponding labels)
 clc;
 clear;
 close all;
-name = 'Andras';
+name = 'Mariana';
 fName = sprintf('%s_1_ML.mat',name);
 load(fName);
 % replace 2s with 1s in labels
@@ -185,7 +186,7 @@ f = linspace(0,49,50); % this should be the same as data.f (if you don't change 
 features_PSD = features(:,1:end-(64*7)); % 7 is hard coded for 1+6diff bands (see calc_powers.m)
 plot_PSD(labels, features_PSD, f, name)
 
-% close all;
+close all;
 
 %% Fisher's score:
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
@@ -193,71 +194,95 @@ disc = plot_fisher(orderedPower, orderedInd, name);
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
 plot_fisher_topoplot(labels, features, eeglab_path, name);
 
+%close all;
+
 
 %% PCA (just for transforming the features, no dim. reduction) / or just leave this out...
-% trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
-% for i=1:15
-%     data.(trials{i}).power_spectrum = powerSpect(data.(trials{i}).channels);  
-% end
-% 
-% for i=1:15
-%     data.(trials{i}).bestindex = apply_pca(data.(trials{i}).power_spectrum);  % double check this!
-% end
 
 
-%% MODEL SELECTION
-%load('Andras_1_ML.mat');
-train_features = features(1:900, :);
-train_labels = labels(1:900);
-%load('Sharbat_1_ML.mat');
-test_features = features(901:end, :);
-test_labels = labels(901:end);
+%% reduce the number of features (based on Fisher score)
+% reorder features
+features_reord = features(:,orderedInd);
+keep = 0.001; % best 0.1%
+% reduce features to the best x %
+features_red = features_reord(:,1:floor(size(features_reord,2)*keep));
 
-%% Discriminant analysis - fitcdiscr
-train_err = [];
-test_err = []; 
-class = cellstr(['diaglinear     ';
-                 'linear         ';
-                 'diagquadratic  ';
-                 ]);
-for selected_c = 1:length(class)          
-classifiertype1 = char(class(selected_c));
-disp(classifiertype1)
+
+%% 3D plot of reduced features (works only with 3 features...)
+assert(size(features_red,2)==3,'Use only 3 features for this plot!');
+% if you keep the 'keep' param at 0.001 -> only 3 features will remain and this plot should work!
+figure;
+scatter3(features_red(find(labels==0),1),features_red(find(labels==0),2),features_red(find(labels==0),3),'b','filled');
+hold on;
+scatter3(features_red(find(labels==1),1),features_red(find(labels==1),2),features_red(find(labels==1),3),'r','filled');
+legend('easy', 'hard');
+
+% loooool they are LINEARLY separable (for Andras)!
+
+
+%% train (multiple) classifiers
+clc;
+
+% initialize partitions for n (10) fold CV
+nfolds = 10;
+%rng(1234); % set seed
+cp = cvpartition(labels,'kfold',nfolds);
+
+% initialize some containers to store results
+train_errors = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'quadratic',zeros(1,nfolds),...
+                      'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));
+test_errors = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'quadratic',zeros(1,nfolds),...
+                      'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));
+true_pos_rates = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'quadratic',zeros(1,nfolds),...
+                        'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));  % only for test - conf. matrix...
+false_pos_rates = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'quadratic',zeros(1,nfolds),...
+                        'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));  % only for test - conf. matrix...
+
+for i=1:nfolds  % big CV loop with all the classifiers!  
+    fprintf('CV loop: %i/%i\n',i,nfolds);
     
-classifier = fitcdiscr(train_features, train_labels, 'discrimtype',  classifiertype1, 'ClassNames', [0 1 2]);
-
-train_res = predict(classifier, train_features); 
-train_err = [train_err classerror(train_res, train_labels)];
-
-test_res = predict(classifier, test_features); 
-test_err = [test_err classerror(test_res, test_labels)];
-
+	test = features_red(cp.test(i),:);
+    train = features_red(cp.training(i),:);
+	labels_test = labels(cp.test(i));
+	labels_train = labels(cp.training(i));
+    
+    % (no clever MATLAB way to update the struct... so let's do it 1 by 1)...
+    % linear
+    [train_errors.linear(1,i), test_errors.linear(1,i), ~, C_test] = train_LDQD(test, train, labels_test, labels_train, 'linear');
+    [true_pos_rates.linear(1,i), false_pos_rates.linear(1,i)] = get_rates(C_test);
+    
+	% diaglinear
+    [train_errors.diaglinear(1,i), test_errors.diaglinear(1,i), ~, C_test] = train_LDQD(test, train, labels_test, labels_train, 'diaglinear');
+    [true_pos_rates.diaglinear(1,i), false_pos_rates.diaglinear(1,i)] = get_rates(C_test);
+    
+    % quadratic
+    [train_errors.quadratic(1,i), test_errors.quadratic(1,i), ~, C_test] = train_LDQD(test, train, labels_test, labels_train, 'quadratic');
+    [true_pos_rates.quadratic(1,i), false_pos_rates.quadratic(1,i)] = get_rates(C_test);
+    
+    % diagquadratic
+    [train_errors.diagquadratic(1,i), test_errors.diagquadratic(1,i), ~, C_test] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
+    [true_pos_rates.diagquadratic(1,i), false_pos_rates.diagquadratic(1,i)] = get_rates(C_test);
+    
+    % SVM
+    [train_errors.SVM(1,i), test_erros.SVM(1,i), ~, C_test] = train_SVM(test, train, labels_test, labels_train);
+    [true_pos_rates.SVM(1,i), false_pos_rates.SVM(1,i)] = get_rates(C_test);
+    
+    % Naive Bayes
+    [train_errors.NB(1,i), test_erros.NB(1,i), ~, C_test] = train_NB(test, train, labels_test, labels_train);
+    [true_pos_rates.NB(1,i), false_pos_rates.NB(1,i)] = get_rates(C_test);
 end
 
-%% classify
-
-% Naive Bayes classifiers - fitcnb
-disp('Naive Bayes');
-Mdl = fitcnb(train_features, train_labels);
-train_res = predict(Mdl, train_features);
-train_err = [train_err classerror(train_res, train_labels)];
-
-test_res = predict(Mdl, test_features);
-test_err = [test_err classerror(test_res, test_labels)];
-
-% Support vector machines (multiclass) - fitcecoc
-disp('SVM');
-Mdl = fitcecoc(train_features, train_labels);
-train_res = predict(Mdl, train_features);
-train_err = [train_err classerror(train_res, train_labels)];
+fprintf('Classifiers trained!\n')
 
 
-test_res = predict(Mdl, test_features);
-test_err = [test_err classerror(test_res, test_labels)];
-% %% Support vector machine (with CV)
-% t = templateSVM('Standardize',1)
-% Mdl = fitcecoc(features,v_labels, 'Learners',t) 
-% CVMdl = crossval(Mdl);
-% oosLoss = kfoldLoss(CVMdl) % classification error
+%% plot out train-test results
 
-%% PEFORMANCE EVALUATION
+plot_errors(train_errors.linear, train_errors.diaglinear, train_errors.quadratic,...
+            train_errors.diagquadratic, train_errors.SVM, train_errors.NB,...
+            'train', name, nfolds);
+plot_errors(test_errors.linear, test_errors.diaglinear, test_errors.quadratic,...
+            test_errors.diagquadratic, test_errors.SVM, test_errors.NB,...
+            'test', name, nfolds);
+plot_ROC(false_pos_rates.linear, false_pos_rates.diaglinear, false_pos_rates.quadratic, false_pos_rates.diagquadratic, false_pos_rates.SVM, false_pos_rates.NB,...
+         true_pos_rates.linear, true_pos_rates.diaglinear, true_pos_rates.quadratic, true_pos_rates.diagquadratic, true_pos_rates.SVM, true_pos_rates.NB, name);
+
