@@ -39,7 +39,7 @@ close all;
 
 mac = 1; % flag for ICA -> change this to 1 on mac!
 
-name = 'Mariana';
+name = 'Elisabetta';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -123,7 +123,7 @@ save(fName, 'data');
 clc;
 clear;
 close all;
-name = 'Mariana';
+name = 'Elisabetta';
 fName = sprintf('%s_1_preprocessed.mat',name);
 load(fName);
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
@@ -192,7 +192,7 @@ close all;
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, name);
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-plot_fisher_topoplot(labels, features, eeglab_path, name);
+%plot_fisher_topoplot(labels, features, eeglab_path, name);
 
 %close all;
 
@@ -225,6 +225,9 @@ clc;
 
 % initialize partitions for n (10) fold CV
 nfolds = 10;
+% make sure that partitions have equal number of samples (for ROC curve with CV...)
+features_red = features_red(1:floor(size(labels,1)/10)*10,:);
+labels = labels(1:floor(size(labels,1)/10)*10,:);
 %rng(1234); % set seed
 cp = cvpartition(labels,'kfold',nfolds);
 
@@ -233,10 +236,13 @@ train_errors = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'qua
                       'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));
 test_errors = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'quadratic',zeros(1,nfolds),...
                       'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));
-true_pos_rates = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'quadratic',zeros(1,nfolds),...
-                        'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));  % only for test - conf. matrix...
-false_pos_rates = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'quadratic',zeros(1,nfolds),...
-                        'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));  % only for test - conf. matrix...
+tmp = floor(size(labels,1)/nfolds)+1;
+ROC = struct('linar_x',zeros(nfolds,tmp),'linear_y',zeros(nfolds,tmp),'linear_AUC',zeros(nfolds,1),...
+             'diaglinar_x',zeros(nfolds,tmp),'diaglinear_y',zeros(nfolds,tmp),'diaglinear_AUC',zeros(nfolds,1),...
+             'quadratic_x',zeros(nfolds,tmp),'quadratic_y',zeros(nfolds,tmp),'quadratic_AUC',zeros(nfolds,1),...
+             'diagquadratic_x',zeros(nfolds,tmp),'diagquadratic_y',zeros(nfolds,tmp),'diagquadratic_AUC',zeros(nfolds,1),...
+             'SVM_x',zeros(nfolds,tmp),'SVM_y',zeros(nfolds,tmp),'SVM_AUC',zeros(nfolds,1),...
+             'NB_x',zeros(nfolds,tmp),'NB_y',zeros(nfolds,tmp),'NB_AUC',zeros(nfolds,1));
 
 for i=1:nfolds  % big CV loop with all the classifiers!  
     fprintf('CV loop: %i/%i\n',i,nfolds);
@@ -248,28 +254,32 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     
     % (no clever MATLAB way to update the struct... so let's do it 1 by 1)...
     % linear
-    [train_errors.linear(1,i), test_errors.linear(1,i), ~, C_test] = train_LDQD(test, train, labels_test, labels_train, 'linear');
-    [true_pos_rates.linear(1,i), false_pos_rates.linear(1,i)] = get_rates(C_test);
+    [train_errors.linear(1,i), test_errors.linear(1,i), ~, ~,...
+     ROC.linear_x(i,:), ROC.linear_y(i,:), ROC.linear_AUC(i,1)] = train_LDQD(test,...
+                                                                             train, labels_test, labels_train, 'linear');
     
 	% diaglinear
-    [train_errors.diaglinear(1,i), test_errors.diaglinear(1,i), ~, C_test] = train_LDQD(test, train, labels_test, labels_train, 'diaglinear');
-    [true_pos_rates.diaglinear(1,i), false_pos_rates.diaglinear(1,i)] = get_rates(C_test);
+    [train_errors.diaglinear(1,i), test_errors.diaglinear(1,i), ~, ~,...
+     ROC.diaglinear_x(i,:), ROC.diaglinear_y(i,:), ROC.diaglinear_AUC(i,1)] = train_LDQD(test,...
+                                                                                         train, labels_test, labels_train, 'diaglinear');
     
     % quadratic
-    [train_errors.quadratic(1,i), test_errors.quadratic(1,i), ~, C_test] = train_LDQD(test, train, labels_test, labels_train, 'quadratic');
-    [true_pos_rates.quadratic(1,i), false_pos_rates.quadratic(1,i)] = get_rates(C_test);
+    [train_errors.quadratic(1,i), test_errors.quadratic(1,i), ~, ~,...
+     ROC.quadratic_x(i,:), ROC.quadratic_y(i,:), ROC.quadratic_AUC(i,1)] = train_LDQD(test,...
+                                                                                      train, labels_test, labels_train, 'quadratic');
     
     % diagquadratic
-    [train_errors.diagquadratic(1,i), test_errors.diagquadratic(1,i), ~, C_test] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
-    [true_pos_rates.diagquadratic(1,i), false_pos_rates.diagquadratic(1,i)] = get_rates(C_test);
+    [train_errors.diagquadratic(1,i), test_errors.diagquadratic(1,i), ~, ~,...
+     ROC.diagquadratic_x(i,:), ROC.diagquadratic_y(i,:), ROC.diagquadratic_AUC(i,1)] = train_LDQD(test,...
+                                                                                                  train, labels_test, labels_train, 'diagquadratic');
     
     % SVM
-    [train_errors.SVM(1,i), test_erros.SVM(1,i), ~, C_test] = train_SVM(test, train, labels_test, labels_train);
-    [true_pos_rates.SVM(1,i), false_pos_rates.SVM(1,i)] = get_rates(C_test);
+    [train_errors.SVM(1,i), test_erros.SVM(1,i), ~, ~,...
+     ROC.SVM_x(i,:), ROC.SVM_y(i,:), ROC.SVM_AUC(i,1)] = train_SVM(test, train, labels_test, labels_train);
     
     % Naive Bayes
-    [train_errors.NB(1,i), test_erros.NB(1,i), ~, C_test] = train_NB(test, train, labels_test, labels_train);
-    [true_pos_rates.NB(1,i), false_pos_rates.NB(1,i)] = get_rates(C_test);
+    [train_errors.NB(1,i), test_erros.NB(1,i), ~, ~,...
+     ROC.NB_x(i,:), ROC.NB_y(i,:), ROC.NB_AUC(i,1)] = train_NB(test, train, labels_test, labels_train);
 end
 
 fprintf('Classifiers trained!\n')
@@ -280,9 +290,11 @@ fprintf('Classifiers trained!\n')
 plot_errors(train_errors.linear, train_errors.diaglinear, train_errors.quadratic,...
             train_errors.diagquadratic, train_errors.SVM, train_errors.NB,...
             'train', name, nfolds);
+        
 plot_errors(test_errors.linear, test_errors.diaglinear, test_errors.quadratic,...
             test_errors.diagquadratic, test_errors.SVM, test_errors.NB,...
             'test', name, nfolds);
-plot_ROC(false_pos_rates.linear, false_pos_rates.diaglinear, false_pos_rates.quadratic, false_pos_rates.diagquadratic, false_pos_rates.SVM, false_pos_rates.NB,...
-         true_pos_rates.linear, true_pos_rates.diaglinear, true_pos_rates.quadratic, true_pos_rates.diagquadratic, true_pos_rates.SVM, true_pos_rates.NB, name);
+        
+plot_ROC(mean(ROC.linear_x), mean(ROC.diaglinear_x), mean(ROC.quadratic_x), mean(ROC.diagquadratic_x), mean(ROC.SVM_x), mean(ROC.NB_x),...
+         mean(ROC.linear_y), mean(ROC.diaglinear_y), mean(ROC.quadratic_y), mean(ROC.diagquadratic_y), mean(ROC.SVM_y), mean(ROC.NB_y), name);
 
