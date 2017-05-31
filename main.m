@@ -143,13 +143,17 @@ for i=1:15  % iterates over trials
         % calc PSD
         [pxx,f]  = calc_PSD(data.(trials{i}).channels(:,(k*Fs)+1:(k+1)*Fs),Fs);
         % cut pxx at 50Hz
-        pxx = pxx(:,find(f<50));
+        f = f(find(2<=f & f<=45));
+        pxx = pxx(:,f);
         % calculate abs.power (integral of PSD curve) relative powers of given freq bands
         relative_powers = calc_powers(f, pxx);
-        % make a flat vector from 64*50 pxx matrix, add powers (64*7 more features)
+        % make a flat vector from 64*44 pxx matrix, add powers (64*7 more features)
         features = [features; reshape(pxx.',1,[]), reshape(relative_powers.',1,[])];
     end 
 end
+
+% save corresponding frequencies (at least once)
+%data.f = f;
 
 % discard all -Infs (some values, for the 0Hz freq. of PSD)
 [rows, cols] = find(features == -Inf);
@@ -158,9 +162,6 @@ if isempty(rows) == 0
     features(rows,:) = [];
 end
 
-% save corresponding frequencies (at least once)
-f = f(1,find(f<50));
-data.f = f;
 % save dataset (ready to do machine learning stuffs)
 fName = sprintf('%s_1_ML.mat',name);
 save(fName,'labels','features');
@@ -173,7 +174,7 @@ fprintf('feature matrix saved!\n')
 clc;
 clear;
 close all;
-name = 'Mariana';
+name = 'Elisabetta';
 fName = sprintf('%s_1_ML.mat',name);
 load(fName);
 % replace 2s with 1s in labels
@@ -182,7 +183,7 @@ labels(labels == 2) = 1;
 
 %% plot PSD...
 % plots 10 random easy and 10 random hard trial PSDs for the same electrodes
-f = linspace(0,49,50); % this should be the same as data.f (if you don't change PSD window size, this should do it!)
+f = linspace(2,45,44); % this should be the same as data.f (if you don't change PSD window size, this should do it!)
 features_PSD = features(:,1:end-(64*7)); % 7 is hard coded for 1+6diff bands (see calc_powers.m)
 plot_PSD(labels, features_PSD, f, name)
 
@@ -192,9 +193,7 @@ close all;
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, name);
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-%plot_fisher_topoplot(labels, features, eeglab_path, name);
-
-%close all;
+plot_fisher_topoplot(labels, features, eeglab_path, name);
 
 
 %% PCA (just for transforming the features, no dim. reduction) / or just leave this out...
@@ -203,21 +202,13 @@ eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
 %% reduce the number of features (based on Fisher score)
 % reorder features
 features_reord = features(:,orderedInd);
-keep = 0.001; % best 0.1%
-% reduce features to the best x %
-features_red = features_reord(:,1:floor(size(features_reord,2)*keep));
+keep = 30;
+features_red = features_reord(:,1:keep);
 
 
-%% 3D plot of reduced features (works only with 3 features...)
-assert(size(features_red,2)==3,'Use only 3 features for this plot!');
-% if you keep the 'keep' param at 0.001 -> only 3 features will remain and this plot should work!
-figure;
-scatter3(features_red(find(labels==0),1),features_red(find(labels==0),2),features_red(find(labels==0),3),'b','filled');
-hold on;
-scatter3(features_red(find(labels==1),1),features_red(find(labels==1),2),features_red(find(labels==1),3),'r','filled');
-legend('easy', 'hard');
-
-% loooool they are LINEARLY separable (for Andras)!
+%% 3D plot of reduced features
+features_plot3d = features_red(:,1:3);
+plot_features_3D(labels, features_plot3d, name)
 
 
 %% train (multiple) classifiers
@@ -232,17 +223,17 @@ labels = labels(1:floor(size(labels,1)/10)*10,:);
 cp = cvpartition(labels,'kfold',nfolds);
 
 % initialize some containers to store results
-train_errors = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'quadratic',zeros(1,nfolds),...
-                      'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));
-test_errors = struct('linear',zeros(1,nfolds),'diaglinear',zeros(1,nfolds),'quadratic',zeros(1,nfolds),...
-                      'diagquadratic',zeros(1,nfolds),'SVM',zeros(1,nfolds),'NB',zeros(1,nfolds));
+train_errors = struct('linear',ones(1,nfolds),'diaglinear',ones(1,nfolds),'quadratic',ones(1,nfolds),...
+                      'diagquadratic',ones(1,nfolds),'SVM',ones(1,nfolds),'NB',ones(1,nfolds));
+test_errors = struct('linear',ones(1,nfolds),'diaglinear',ones(1,nfolds),'quadratic',ones(1,nfolds),...
+                      'diagquadratic',ones(1,nfolds),'SVM',ones(1,nfolds),'NB',ones(1,nfolds));
 tmp = floor(size(labels,1)/nfolds)+1;
-ROC = struct('linar_x',zeros(nfolds,tmp),'linear_y',zeros(nfolds,tmp),'linear_AUC',zeros(nfolds,1),...
-             'diaglinar_x',zeros(nfolds,tmp),'diaglinear_y',zeros(nfolds,tmp),'diaglinear_AUC',zeros(nfolds,1),...
-             'quadratic_x',zeros(nfolds,tmp),'quadratic_y',zeros(nfolds,tmp),'quadratic_AUC',zeros(nfolds,1),...
-             'diagquadratic_x',zeros(nfolds,tmp),'diagquadratic_y',zeros(nfolds,tmp),'diagquadratic_AUC',zeros(nfolds,1),...
-             'SVM_x',zeros(nfolds,tmp),'SVM_y',zeros(nfolds,tmp),'SVM_AUC',zeros(nfolds,1),...
-             'NB_x',zeros(nfolds,tmp),'NB_y',zeros(nfolds,tmp),'NB_AUC',zeros(nfolds,1));
+ROC = struct('linear_x',[],'linear_y',[],'linear_AUC',zeros(nfolds,1),...
+             'diaglinear_x',[],'diaglinear_y',[],'diaglinear_AUC',zeros(nfolds,1),...
+             'quadratic_x',[],'quadratic_y',[],'quadratic_AUC',zeros(nfolds,1),...
+             'diagquadratic_x',[],'diagquadratic_y',[],'diagquadratic_AUC',zeros(nfolds,1),...
+             'SVM_x',[],'SVM_y',[],'SVM_AUC',zeros(nfolds,1),...
+             'NB_x',[],'NB_y',[],'NB_AUC',zeros(nfolds,1));
 
 for i=1:nfolds  % big CV loop with all the classifiers!  
     fprintf('CV loop: %i/%i\n',i,nfolds);
@@ -255,31 +246,45 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     % (no clever MATLAB way to update the struct... so let's do it 1 by 1)...
     % linear
     [train_errors.linear(1,i), test_errors.linear(1,i), ~, ~,...
-     ROC.linear_x(i,:), ROC.linear_y(i,:), ROC.linear_AUC(i,1)] = train_LDQD(test,...
-                                                                             train, labels_test, labels_train, 'linear');
+     ROC_x, ROC_y, ROC.linear_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'linear');
+    if i == 1 || test_errors.linear(1,i) < min(test_errors.linear(1,1:i-1))
+        ROC.linear_x = ROC_x;  ROC.linear_y = ROC_y;
+    end
     
 	% diaglinear
     [train_errors.diaglinear(1,i), test_errors.diaglinear(1,i), ~, ~,...
-     ROC.diaglinear_x(i,:), ROC.diaglinear_y(i,:), ROC.diaglinear_AUC(i,1)] = train_LDQD(test,...
-                                                                                         train, labels_test, labels_train, 'diaglinear');
+     ROC_x, ROC_y, ROC.diaglinear_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'diaglinear');
+    if i == 1 || test_errors.diaglinear(1,i) < min(test_errors.diaglinear(1,1:i-1))
+        ROC.diaglinear_x = ROC_x;  ROC.diaglinear_y = ROC_y;
+    end
     
     % quadratic
     [train_errors.quadratic(1,i), test_errors.quadratic(1,i), ~, ~,...
-     ROC.quadratic_x(i,:), ROC.quadratic_y(i,:), ROC.quadratic_AUC(i,1)] = train_LDQD(test,...
-                                                                                      train, labels_test, labels_train, 'quadratic');
+     ROC_x, ROC_y, ROC.quadratic_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'quadratic');
+    if i == 1 || test_errors.quadratic(1,i) < min(test_errors.quadratic(1,1:i-1))
+        ROC.quadratic_x = ROC_x;  ROC.quadratic_y = ROC_y;
+    end
     
     % diagquadratic
     [train_errors.diagquadratic(1,i), test_errors.diagquadratic(1,i), ~, ~,...
-     ROC.diagquadratic_x(i,:), ROC.diagquadratic_y(i,:), ROC.diagquadratic_AUC(i,1)] = train_LDQD(test,...
-                                                                                                  train, labels_test, labels_train, 'diagquadratic');
-    
+     ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
+    if i == 1 || test_errors.diagquadratic(1,i) < min(test_errors.diagquadratic(1,1:i-1))
+        ROC.diagquadratic_x = ROC_x;  ROC.diagquadratic_y = ROC_y;
+    end
+                                                                                              
     % SVM
-    [train_errors.SVM(1,i), test_erros.SVM(1,i), ~, ~,...
-     ROC.SVM_x(i,:), ROC.SVM_y(i,:), ROC.SVM_AUC(i,1)] = train_SVM(test, train, labels_test, labels_train);
+    [train_errors.SVM(1,i), test_errors.SVM(1,i), ~, ~,...
+     ROC_x, ROC_y, ROC.SVM_AUC(i,1)] = train_SVM(test, train, labels_test, labels_train);
+    if i == 1 || test_errors.SVM(1,i) < min(test_errors.SVM(1,1:i-1))
+        ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y;
+    end
     
     % Naive Bayes
-    [train_errors.NB(1,i), test_erros.NB(1,i), ~, ~,...
-     ROC.NB_x(i,:), ROC.NB_y(i,:), ROC.NB_AUC(i,1)] = train_NB(test, train, labels_test, labels_train);
+    [train_errors.NB(1,i), test_errors.NB(1,i), ~, ~,...
+     ROC_x, ROC_y, ROC.NB_AUC(i,1)] = train_NB(test, train, labels_test, labels_train);
+    if i == 1 || test_errors.NB(1,i) < min(test_errors.NB(1,1:i-1))
+        ROC.NB_x = ROC_x;  ROC.NB_y = ROC_y;
+    end
 end
 
 fprintf('Classifiers trained!\n')
@@ -295,6 +300,6 @@ plot_errors(test_errors.linear, test_errors.diaglinear, test_errors.quadratic,..
             test_errors.diagquadratic, test_errors.SVM, test_errors.NB,...
             'test', name, nfolds);
         
-plot_ROC(mean(ROC.linear_x), mean(ROC.diaglinear_x), mean(ROC.quadratic_x), mean(ROC.diagquadratic_x), mean(ROC.SVM_x), mean(ROC.NB_x),...
-         mean(ROC.linear_y), mean(ROC.diaglinear_y), mean(ROC.quadratic_y), mean(ROC.diagquadratic_y), mean(ROC.SVM_y), mean(ROC.NB_y), name);
+plot_ROC(ROC.linear_x, ROC.diaglinear_x, ROC.quadratic_x, ROC.diagquadratic_x, ROC.SVM_x, ROC.NB_x,...
+         ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, name);
 
