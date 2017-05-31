@@ -1,6 +1,8 @@
 function relative_powers = calc_powers(f, pxx)
 % calculate relative power of some interesting frequency band in the spectrum
 
+assert(size(pxx,2) == size(f,2), 'calculated PSD length and the length of the freq. vector do not match');
+
 power = trapz(pxx,2);  % integral of the whole power spectrum
 
 % delta wave (2-4 Hz)
@@ -19,7 +21,7 @@ power_low_beta = trapz(pxx_tmp,2);
 pxx_tmp = pxx(:, find(18<f & f<=30));
 power_high_beta = trapz(pxx_tmp,2);
 % gamma wave (30-50 Hz)
-pxx_tmp = pxx(:, find(30<f & f<50));
+pxx_tmp = pxx(:, find(30<f & f<=45));
 power_gamma = trapz(pxx_tmp,2);
 
 relative_powers = [power,...
