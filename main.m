@@ -39,7 +39,7 @@ close all;
 
 mac = 1; % flag for ICA -> change this to 1 on mac!
 
-name = 'Elisabetta';
+name = 'Andras';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -87,31 +87,38 @@ for i=1:15
    % calculate weight matrix
    [data.(trials{i}).weights, data.(trials{i}).sphere] = ICA(data.(trials{i}).channels, mac);
    % project dataset
-   data.(trials{i}).channels = data.(trials{i}).weights * data.(trials{i}).channels;
+   W = data.(trials{i}).weights * data.(trials{i}).sphere;  % unmixing matrix
+   data.(trials{i}).channels = W * data.(trials{i}).channels;
 end
+
 if mac == 0 % delete generated (random) binary files on linux
     delete 'binica*'
     delete 'bias_after_adjust'
     delete 'temp.*'
 end
+
 fprintf('ICA done!\n')
 
 
 %% check correlation (with eye movement)
-% one can run from this after spatial filtering (and just skip the ICA part)
+% one can run from this after temporal filtering (and just skip the ICA part)
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
-corr_threshold = 0.8;
-trial_thershold = 8;
+corr_threshold = 0.5;
+trial_thershold = 7;
 discard_channels = zeros(1,64);
 for i=1:15
     [horizontal_corr, vertical_corr] = check_correlation(data.(trials{i}).channels,...
-                                                         data.(trials{i}).eye_channels, corr_threshold);
+                                                         data.(trials{i}).eye_channels, down_, corr_threshold);
     discard_channels_trial = [horizontal_corr, vertical_corr];  % channels discarded according to this trial
     discard_channels(discard_channels_trial) = discard_channels(discard_channels_trial)+1; % no += 1 :(
 end
 % channels wich have high(er than 'corr_threshold') correlation in (at least) 'trial_threshold' trials
 data.discard = find(discard_channels > trial_thershold);
 fprintf('%i channels discarded from analysis, because of high correlation!\n',size(data.discard,2));
+
+%% TODO: add the EOG artefact removal
+% might be added to the code block above
+% use mixing matrix inv(W) after rejection of components
 
 
 %% save preprocessed dataset!
@@ -123,7 +130,7 @@ save(fName, 'data');
 clc;
 clear;
 close all;
-name = 'Elisabetta';
+name = 'Andras';
 fName = sprintf('%s_1_preprocessed.mat',name);
 load(fName);
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
@@ -174,7 +181,7 @@ fprintf('feature matrix saved!\n')
 clc;
 clear;
 close all;
-name = 'Elisabetta';
+name = 'Andras';
 fName = sprintf('%s_1_ML.mat',name);
 load(fName);
 % replace 2s with 1s in labels
@@ -233,11 +240,13 @@ ROC = struct('linear_x',[],'linear_y',[],'linear_AUC',zeros(nfolds,1),...
              'quadratic_x',[],'quadratic_y',[],'quadratic_AUC',zeros(nfolds,1),...
              'diagquadratic_x',[],'diagquadratic_y',[],'diagquadratic_AUC',zeros(nfolds,1),...
              'SVM_x',[],'SVM_y',[],'SVM_AUC',zeros(nfolds,1),...
-             'NB_x',[],'NB_y',[],'NB_AUC',zeros(nfolds,1));
+             'NB_x',[],'NB_y',[],'NB_AUC',zeros(nfolds,1),...
+             'best_AUCs',ones(1,6));
 
 for i=1:nfolds  % big CV loop with all the classifiers!  
     fprintf('CV loop: %i/%i\n',i,nfolds);
     
+    %TODO: replace partitioning with cont. samples!!! -eg. write function cvpartition_EEG to make similar structure that cvpartition
 	test = features_red(cp.test(i),:);
     train = features_red(cp.training(i),:);
 	labels_test = labels(cp.test(i));
@@ -248,42 +257,42 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     [train_errors.linear(1,i), test_errors.linear(1,i), ~, ~,...
      ROC_x, ROC_y, ROC.linear_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'linear');
     if i == 1 || test_errors.linear(1,i) < min(test_errors.linear(1,1:i-1))
-        ROC.linear_x = ROC_x;  ROC.linear_y = ROC_y;
+        ROC.linear_x = ROC_x;  ROC.linear_y = ROC_y; ROC.best_AUCs(1,1) = ROC.linear_AUC(i,1);
     end
     
 	% diaglinear
     [train_errors.diaglinear(1,i), test_errors.diaglinear(1,i), ~, ~,...
      ROC_x, ROC_y, ROC.diaglinear_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'diaglinear');
     if i == 1 || test_errors.diaglinear(1,i) < min(test_errors.diaglinear(1,1:i-1))
-        ROC.diaglinear_x = ROC_x;  ROC.diaglinear_y = ROC_y;
+        ROC.diaglinear_x = ROC_x;  ROC.diaglinear_y = ROC_y; ROC.best_AUCs(1,2) = ROC.diaglinear_AUC(i,1);
     end
     
     % quadratic
     [train_errors.quadratic(1,i), test_errors.quadratic(1,i), ~, ~,...
      ROC_x, ROC_y, ROC.quadratic_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'quadratic');
     if i == 1 || test_errors.quadratic(1,i) < min(test_errors.quadratic(1,1:i-1))
-        ROC.quadratic_x = ROC_x;  ROC.quadratic_y = ROC_y;
+        ROC.quadratic_x = ROC_x;  ROC.quadratic_y = ROC_y; ROC.best_AUCs(1,3) = ROC.quadratic_AUC(i,1);
     end
     
     % diagquadratic
     [train_errors.diagquadratic(1,i), test_errors.diagquadratic(1,i), ~, ~,...
      ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
     if i == 1 || test_errors.diagquadratic(1,i) < min(test_errors.diagquadratic(1,1:i-1))
-        ROC.diagquadratic_x = ROC_x;  ROC.diagquadratic_y = ROC_y;
+        ROC.diagquadratic_x = ROC_x;  ROC.diagquadratic_y = ROC_y; ROC.best_AUCs(1,4) = ROC.diagquadratic_AUC(i,1);
     end
                                                                                               
     % SVM
     [train_errors.SVM(1,i), test_errors.SVM(1,i), ~, ~,...
      ROC_x, ROC_y, ROC.SVM_AUC(i,1)] = train_SVM(test, train, labels_test, labels_train);
     if i == 1 || test_errors.SVM(1,i) < min(test_errors.SVM(1,1:i-1))
-        ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y;
+        ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y; ROC.best_AUCs(1,5) = ROC.SVM_AUC(i,1);
     end
     
     % Naive Bayes
     [train_errors.NB(1,i), test_errors.NB(1,i), ~, ~,...
      ROC_x, ROC_y, ROC.NB_AUC(i,1)] = train_NB(test, train, labels_test, labels_train);
     if i == 1 || test_errors.NB(1,i) < min(test_errors.NB(1,1:i-1))
-        ROC.NB_x = ROC_x;  ROC.NB_y = ROC_y;
+        ROC.NB_x = ROC_x;  ROC.NB_y = ROC_y; ROC.best_AUCs(1,6) = ROC.NB_AUC(i,1);
     end
 end
 
@@ -301,5 +310,5 @@ plot_errors(test_errors.linear, test_errors.diaglinear, test_errors.quadratic,..
             'test', name, nfolds);
         
 plot_ROC(ROC.linear_x, ROC.diaglinear_x, ROC.quadratic_x, ROC.diagquadratic_x, ROC.SVM_x, ROC.NB_x,...
-         ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, name);
+         ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, name, ROC.best_AUCs);
 

@@ -7,17 +7,22 @@ left_eye = eye_channels(1,1:down:end);
 nasion = eye_channels(2,1:down:end);
 right_eye = eye_channels(3,1:down:end);
 
-% spatial gilter EOG
-horizontal_eye_movement = left_eye-right_eye;
-vertical_eye_movement = nasion - mean([left_eye; right_eye]);
+% spatial filter EOG
+horizontal_eye_movement_spatial = left_eye-right_eye;
+vertical_eye_movement_spatial = nasion - mean([left_eye; right_eye]);
 
 % temporal filter EOG
-horizontal_eye_movement = temporal_filter(horizontal_eye_movement, Fs);
-vertical_eye_movement = temporal_filter(vertical_eye_movement, Fs);
+horizontal_eye_movement_temp = temporal_filter(horizontal_eye_movement_spatial, Fs);
+vertical_eye_movement_temp = temporal_filter(vertical_eye_movement_spatial, Fs);
+% reject the beginning and the end of the trial (it's noisy after temporal filtering)
+rej = floor(0.05*size(horizontal_eye_movement_temp,2));  % 5% of the dataset (in the beg. and end.)
+horizontal_eye_movement = horizontal_eye_movement_temp(rej:end-rej);
+vertical_eye_movement = vertical_eye_movement_temp(rej:end-rej);
+
 
 eye_movement_corr = zeros(2,64);  % store results
 for i=1:64
-    chan = channels(i,:);
+    chan = channels(i,rej:end-rej);
     % horizontal eye movement (1st row in eye_movement_corr)
     tmp = corrcoef(chan, horizontal_eye_movement); % 2*2 matrix
     corr_ = tmp(1,2);
