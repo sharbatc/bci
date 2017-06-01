@@ -11,16 +11,10 @@ function [weights, sphere] = ICA(channels, mac)
 % return weights -> decomposed_channels = weights*sphere*channels
 
 if mac == 1  % call runica()
-	% run ICA on the whole trial
-    [weights, sphere] = runica(channels,'stop',1e-6,'maxsteps',256,'verbose', 'off'); 
+    [weights, sphere] = runica(channels,'pca',63,'stop',1e-6,'maxsteps',256,'verbose','off'); 
     
-elseif mac == 0  % use binica() and precomputed weights on linux
-    % run ICA on short epoch (5% of the whole dataset in the middle of the trial) to get initial weights
-    tmp = size(channels,2)/20;
-    [init_weights, ~] = binica(channels(:,10*tmp:11*tmp),'stop',1e-6,'maxsteps',256,'verbose', 'off');
-
-    % run ICA on the whole trial, using the inital weights calculated before
-    [weights, sphere] = binica(channels,'weightsin',init_weights,'stop',1e-6,'maxsteps',256,'verbose', 'off'); 
+elseif mac == 0  % use binica() on linux
+    [weights, sphere] = binica(channels,'pca',63,'stop',1e-6,'maxsteps',256,'verbose','off'); 
 end
 
 end
