@@ -1,12 +1,21 @@
-function [horizontal_corr, vertical_corr] =  check_correlation(channels, eye_channels, threshold)
-% checks the correlation of the channels with EOG (downsampled EOG by 8 first)
+function [horizontal_corr, vertical_corr] =  check_correlation(channels, eye_channels, down, threshold)
+% checks the correlation of the channels with EOG (downsampled and filter EOG first)
 
-eye_movement_corr = zeros(2,64);  % store results
-left_eye = eye_channels(1,1:8:end);
-nasion = eye_channels(2,1:8:end);
-right_eye = eye_channels(3,1:8:end);
+% downsample EOG
+Fs = 2048/down;
+left_eye = eye_channels(1,1:down:end);
+nasion = eye_channels(2,1:down:end);
+right_eye = eye_channels(3,1:down:end);
+
+% spatial gilter EOG
 horizontal_eye_movement = left_eye-right_eye;
 vertical_eye_movement = nasion - mean([left_eye; right_eye]);
+
+% temporal filter EOG
+horizontal_eye_movement = temporal_filter(horizontal_eye_movement, Fs);
+vertical_eye_movement = temporal_filter(vertical_eye_movement, Fs);
+
+eye_movement_corr = zeros(2,64);  % store results
 for i=1:64
     chan = channels(i,:);
     % horizontal eye movement (1st row in eye_movement_corr)
