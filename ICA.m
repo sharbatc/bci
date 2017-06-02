@@ -8,13 +8,23 @@ function [weights, sphere] = ICA(channels, mac)
 % source code binica: https://sccn.ucsd.edu/svn/software/eeglab/functions/sigprocfunc/binica.m
 % source code runica: https://sccn.ucsd.edu/svn/software/eeglab/functions/sigprocfunc/runica.m
 
-% return weights -> decomposed_channels = weights*sphere*channels
+% return weights -> decomposed_channels = (weights*sphere)*channels
 
 if mac == 1  % call runica()
-    [weights, sphere] = runica(channels,'pca',63,'stop',1e-6,'maxsteps',256,'verbose','off'); 
+    [weights, sphere] = runica(channels,'stop',1e-6,'maxsteps',256,'verbose','off'); 
     
-elseif mac == 0  % use binica() on linux
-    [weights, sphere] = binica(channels,'pca',63,'stop',1e-6,'maxsteps',256,'verbose','off'); 
+elseif mac == 0  % use precomputed weights and binica() on linux
+    % precompute weights
+    tmp = floor(size(channels,2)/20);
+    [init_weights, ~] = binica(channels(:,10*tmp:11*tmp),'stop',1e-6,'maxsteps',256,'verbose','off');
+    
+    [weights, sphere] = binica(channels,'weightsin',init_weights,'stop',1e-6,'maxsteps',256,'verbose','off');
+    
+    % delete generated (random) binary files on linux
+    delete 'binica*'
+    delete 'bias_after_adjust'
+    delete 'temp.*'
+
 end
 
 end
