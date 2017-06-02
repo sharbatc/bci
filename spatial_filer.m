@@ -4,7 +4,7 @@ function filtered_channels = spatial_filer(channels, method)
 switch method
     case 'CAR'
         % simple normalization
-        filtered_channels = channels - mean2(channels);
+        filtered_channels = channels - (ones(size(channels,1),1)*mean(channels));
     case 'Laplacian'
         % spatial organization spec.
         chanfile = '10-20_biosemi.txt';
