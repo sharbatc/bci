@@ -28,23 +28,24 @@ power_hard = mean(power_hard,2);
 
 
 figure;
-set(gcf,'units','points','position',[100,100,1300,500]);
-subplot(1,3,1);
-topoplot(power_easy-mean(power_easy), 'eeglab_chan64_2.elp');
-title('easy trials');
-subplot(1,3,2);
-topoplot((power_easy-power_hard-mean(power_easy-power_hard)), 'eeglab_chan64_2.elp');
-title(sprintf('%s: power - discr. chans', name));  % not Fisher score! (just the difference of the 2 prev plots)
-subplot(1,3,3);
-topoplot(power_hard-mean(power_hard), 'eeglab_chan64_2.elp');
-title('hard trials');
+set(gcf,'units','points','position',[100,100,1000,500]);
+subplot(1,2,1);
+topoplot((power_easy-mean(power_easy)), 'eeglab_chan64_2.elp');
+title(sprintf('%s: power - easy trials',name));
+subplot(1,2,2);
+topoplot((power_hard-mean(power_hard)), 'eeglab_chan64_2.elp');
+title(sprintf('%s: power - hard trials',name));
+
 fName = sprintf('pictures/%s_power.png',name);
 saveas(gcf, fName);
 
-%figure;
-%topoplot((power_easy-power_hard-mean(power_easy-power_hard)), 'eeglab_chan64_2.elp');
-%title(sprintf('%s: power - discr. chans', name));  % not Fisher score! (just the difference of the 2 prev plots)
-%fName = sprintf('pictures/%s_power.png',name);
-%saveas(gcf, fName);
+% take the difference!
+figure;
+topoplot((power_easy-power_hard-mean(power_easy-power_hard)), 'eeglab_chan64_2.elp');  % not Fisher score! (just the difference of the 2 prev plots)
+title(sprintf('%s: power disc. chans (easy-hard)',name));
+
+
+fName = sprintf('pictures/%s_power2.png',name);
+saveas(gcf, fName);
 
 end
