@@ -45,7 +45,7 @@ for c=0:63  % iterates over every channel (1 figure will be saved for all channe
     legend([avg_easy, avg_hard],{'mean(easy)','mean(hard)'});
     title(sprintf('%s electrode:%i',name,c+1));
     xlabel('freq (Hz)');
-    xlim([2,45]);
+    xlim([3,45]);
     ylabel('pxx (dB)');
     
     fName = sprintf('pictures/PSD/%s_el_%i.png',name,c+1);

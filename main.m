@@ -82,7 +82,7 @@ fprintf('temporal filtering done!\n')
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
 addpath(sprintf('%s/functions/sigprocfunc',eeglab_path));
 for i=1:15  
-    fprintf('Decomposing trial %i!\n',i);
+    fprintf('decomposing trial %i!\n',i);
     % calculate weight matrix   
     [data.(trials{i}).weights, data.(trials{i}).sphere] = ICA(data.(trials{i}).channels, mac);
     % project dataset
@@ -116,6 +116,9 @@ fName = sprintf('%s_1_preprocessed.mat',name);
 save(fName, 'data', 'Fs', 'trials');
 
 
+%% ==================== end of preprocessing ====================
+
+
 %% load in preprocessed dataset!
 clc;
 clear;
@@ -133,6 +136,7 @@ labels = [];  % will be a column vector; size: 15 * lenght trial (in sec)
 features = [];  % feature matrix; size: size(labels,1) * (64*size(pxx,2)+64*7)
 
 for i=1:15  % iterates over trials
+    %fprintf('processing trial %i!\n',i);
     len_trial = floor(size(data.(trials{i}).channels,2)/Fs);
     for k=0:len_trial-1  % iterates over seconds in the trial (1 by 1)
         % add label for every epoch
