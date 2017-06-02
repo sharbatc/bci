@@ -1,5 +1,5 @@
 % main file for BCI project #ames !
-% last update: 25/05 - Andras
+% last update: 01/06 - Andras
 
 %% Use this always =)
 
@@ -37,7 +37,7 @@ clc;
 clear;
 close all;
 
-mac = 1; % flag for ICA -> change this to 1 on mac!
+mac = 0; % flag for ICA -> change this to 1 on mac!
 
 name = 'Andras';
 fName = sprintf('%s_1.mat',name);
@@ -78,52 +78,42 @@ fprintf('temporal filtering done!\n')
 
 
 %% apply ICA
-% it's pretty slow and prints a lot!
-
+% it's pretty slow!
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
 addpath(sprintf('%s/functions/sigprocfunc',eeglab_path));
+for i=1:15  
+    fprintf('Decomposing trial %i!\n',i);
+    % calculate weight matrix   
+    [data.(trials{i}).weights, data.(trials{i}).sphere] = ICA(data.(trials{i}).channels, mac);
+    % project dataset
+    W = data.(trials{i}).weights * data.(trials{i}).sphere;  % unmixing matrix (64*64)
+    assert(isreal(W * data.(trials{i}).channels) == 1, 'Complex values after ICA, consider using less components!')
+    data.(trials{i}).ICAactivations = W * data.(trials{i}).channels;
+end
+fprintf('ICA decomposition done!\n')
 
+
+%% check correlation: ICA activations with (horizontal & vertical) eye movement
+threshold = 2;  % 2*std
 for i=1:15
-   % calculate weight matrix
-   [data.(trials{i}).weights, data.(trials{i}).sphere] = ICA(data.(trials{i}).channels, mac);
-   % project dataset
-   W = data.(trials{i}).weights * data.(trials{i}).sphere;  % unmixing matrix
-   data.(trials{i}).channels = W * data.(trials{i}).channels;
+    [horizontal_corr, vertical_corr] = check_correlation(data.(trials{i}).ICAactivations, data.(trials{i}).eye_channels,...
+                                                         down_, threshold, eeglab_path, i, name);
+    data.(trials{i}).remove = union(horizontal_corr, vertical_corr);                                            
 end
-
-if mac == 0 % delete generated (random) binary files on linux
-    delete 'binica*'
-    delete 'bias_after_adjust'
-    delete 'temp.*'
-end
-
-fprintf('ICA done!\n')
+close all;
 
 
-%% check correlation (with eye movement)
-% one can run from this after temporal filtering (and just skip the ICA part)
-trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
-corr_threshold = 0.5;
-trial_thershold = 7;
-discard_channels = zeros(1,64);
+%% remove components with high corr. and reconstruct the signal
 for i=1:15
-    [horizontal_corr, vertical_corr] = check_correlation(data.(trials{i}).channels,...
-                                                         data.(trials{i}).eye_channels, down_, corr_threshold);
-    discard_channels_trial = [horizontal_corr, vertical_corr];  % channels discarded according to this trial
-    discard_channels(discard_channels_trial) = discard_channels(discard_channels_trial)+1; % no += 1 :(
+    invW = inv(data.(trials{i}).weights * data.(trials{i}).sphere);  % mixing matrix (64*64)
+    invW(:,data.(trials{i}).remove) = 0;  % remove components
+    data.(trials{i}).channels = invW * data.(trials{i}).ICAactivations;
 end
-% channels wich have high(er than 'corr_threshold') correlation in (at least) 'trial_threshold' trials
-data.discard = find(discard_channels > trial_thershold);
-fprintf('%i channels discarded from analysis, because of high correlation!\n',size(data.discard,2));
-
-%% TODO: add the EOG artefact removal
-% might be added to the code block above
-% use mixing matrix inv(W) after rejection of components
-
+fprintf('signal recomposed!\n')
 
 %% save preprocessed dataset!
 fName = sprintf('%s_1_preprocessed.mat',name);
-save(fName, 'data');
+save(fName, 'data', 'Fs', 'trials');
 
 
 %% load in preprocessed dataset!
@@ -133,11 +123,11 @@ close all;
 name = 'Andras';
 fName = sprintf('%s_1_preprocessed.mat',name);
 load(fName);
-trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
-Fs = 256;
+
 
 %% create feature matrix == calc PSDs (+ integral of PSD)
 % note: hard coded for 1sec epoching!
+%TODO: change for ovelapping windows
 
 labels = [];  % will be a column vector; size: 15 * lenght trial (in sec)
 features = [];  % feature matrix; size: size(labels,1) * (64*size(pxx,2)+64*7)
@@ -159,23 +149,14 @@ for i=1:15  % iterates over trials
     end 
 end
 
-% save corresponding frequencies (at least once)
-%data.f = f;
-
-% discard all -Infs (some values, for the 0Hz freq. of PSD)
-[rows, cols] = find(features == -Inf);
-if isempty(rows) == 0
-    labels(rows,:) = [];
-    features(rows,:) = [];
-end
-
 % save dataset (ready to do machine learning stuffs)
 fName = sprintf('%s_1_ML.mat',name);
-save(fName,'labels','features');
+save(fName,'labels','features','f');
 fprintf('feature matrix saved!\n')
 
 
 %% ==================== Machine learning from here ====================
+
 
 %% load in feature matrix (and corresponding labels)
 clc;
@@ -184,26 +165,22 @@ close all;
 name = 'Andras';
 fName = sprintf('%s_1_ML.mat',name);
 load(fName);
-% replace 2s with 1s in labels
+% replace 2s with 1s in labels (pool hard & hard with assistance)
 labels(labels == 2) = 1;
 
 
 %% plot PSD...
 % plots 10 random easy and 10 random hard trial PSDs for the same electrodes
-f = linspace(2,45,44); % this should be the same as data.f (if you don't change PSD window size, this should do it!)
 features_PSD = features(:,1:end-(64*7)); % 7 is hard coded for 1+6diff bands (see calc_powers.m)
 plot_PSD(labels, features_PSD, f, name)
-
 close all;
+
 
 %% Fisher's score:
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, name);
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
 plot_fisher_topoplot(labels, features, eeglab_path, name);
-
-
-%% PCA (just for transforming the features, no dim. reduction) / or just leave this out...
 
 
 %% reduce the number of features (based on Fisher score)
