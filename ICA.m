@@ -13,10 +13,10 @@ assert(ncomponents <= 64,'max number of components to keep is 64')
 
 if mac == 1  % call runica()
     if ncomponents < 64
-        [weights, sphere] = runica(channels,'stop',1e-6,'maxsteps',256,'verbose','off');
+        [weights, sphere] = runica(channels,'pca',ncomponents,'stop',1e-6,'maxsteps',256,'verbose','off');
         [activations, invW, W] = posact(channels,weights,sphere);  % might be buggy - by EEGLab people
     else
-        [weights, sphere] = runica(channels,'pca',ncomponents,'stop',1e-6,'maxsteps',256,'verbose','off');
+        [weights, sphere] = runica(channels,'stop',1e-6,'maxsteps',256,'verbose','off');
         W = weights * sphere;  % unmixing matrix
         invW = inv(W);  % mixing matrix
         activations = W * channels;
