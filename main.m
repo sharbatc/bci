@@ -16,12 +16,14 @@ mac = 1; % flag for ICA -> change this to 1 on mac!
 %name = 'Mariana';
 %fName = '/home/bandi/EPFL/BCI/ad10_13032017.bdf'; % Mariana's 1st
 %labels = [0,2,0,0,2,0,2,2,1,1,1,1,2,1,0]; % Mariana's 1st
-%name = 'Sharbat';
-%fName = '/home/bandi/EPFL/BCI/ad3_08032017.bdf'; % Sharbat's 1st
-%labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2]; % Sharbat's 1st
+% name = 'Sharbat';
+% fName = '/home/bandi/EPFL/BCI/ad3_08032017.bdf'; % Sharbat's 1st
+% fName = '/Users/sharbatc/Academia/Projects/BCI/data/ad3_08032017.bdf';
+% labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2]; % Sharbat's 1st
 name = 'Andras';
 fName = '/home/bandi/EPFL/BCI/ag2_22032017.bdf'; % Andras' 1st
 labels = [0,2,0,1,2,2,0,0,0,1,1,1,2,2,1]; % Andras' 1st
+
 
 Fs = 2048;
 
@@ -37,9 +39,12 @@ clc;
 clear;
 close all;
 
-mac = 0; % flag for ICA -> change this to 1 on mac!
+mac = 1
+; % flag for ICA -> change this to 1 on mac!
 
-name = 'Andras';
+
+%name = 'Andras';
+name = 'Sharbat';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -79,9 +84,10 @@ fprintf('temporal filtering done!\n')
 
 %% apply ICA
 % it's pretty slow!
-eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+%eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
 addpath(sprintf('%s/functions/sigprocfunc',eeglab_path));
-ncomponents = 50; % number of components to keep (change this to avoid complex values)
+ncomponents = 45; % number of components to keep (change this to avoid complex values)
 for i=1:15
     fprintf('decomposing trial %i!\n',i);
     % calculate weight matrix   
