@@ -43,7 +43,7 @@ name = 'Andras';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
-fprintf('data loaded!\n')
+fprintf('data loaded!\n');
 
 % description of the data format:
 % struct (called data) with the original header, labels and 15 structs inside (for each trials).
@@ -81,14 +81,12 @@ fprintf('temporal filtering done!\n')
 % it's pretty slow!
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
 addpath(sprintf('%s/functions/sigprocfunc',eeglab_path));
-for i=1:15  
+ncomponents = 50; % number of components to keep (change this to avoid complex values)
+for i=1:15
     fprintf('decomposing trial %i!\n',i);
     % calculate weight matrix   
-    [data.(trials{i}).weights, data.(trials{i}).sphere] = ICA(data.(trials{i}).channels, mac);
-    % project dataset
-    W = data.(trials{i}).weights * data.(trials{i}).sphere;  % unmixing matrix (64*64)
-    assert(isreal(W * data.(trials{i}).channels) == 1, 'Complex values after ICA, consider using less components!')
-    data.(trials{i}).ICAactivations = W * data.(trials{i}).channels;
+    [data.(trials{i}).ICAactivations, data.(trials{i}).W, data.(trials{i}).invW] = ICA(data.(trials{i}).channels, ncomponents, mac);
+    assert(isreal(data.(trials{i}).ICAactivations) == 1, 'Complex values after ICA, consider using less components!')
 end
 fprintf('ICA decomposition done!\n')
 
@@ -105,9 +103,8 @@ close all;
 
 %% remove components with high corr. and reconstruct the signal
 for i=1:15
-    invW = inv(data.(trials{i}).weights * data.(trials{i}).sphere);  % mixing matrix (64*64)
-    invW(:,data.(trials{i}).remove) = 0;  % remove components
-    data.(trials{i}).channels = invW * data.(trials{i}).ICAactivations;
+        data.(trials{i}).invW(:,data.(trials{i}).remove) = 0;  % remove components
+        data.(trials{i}).channels = data.(trials{i}).invW * data.(trials{i}).ICAactivations;
 end
 fprintf('signal recomposed!\n')
 
