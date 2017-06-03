@@ -199,13 +199,9 @@ plot_features_3D(labels, features_plot3d, name)
 %% train (multiple) classifiers
 clc;
 
-% initialize partitions for n (10) fold CV
+% initialize partitions for 10 fold CV
 nfolds = 10;
-% make sure that partitions have equal number of samples (for ROC curve with CV...)
-features_red = features_red(1:floor(size(labels,1)/10)*10,:);
-labels = labels(1:floor(size(labels,1)/10)*10,:);
-%rng(1234); % set seed
-cp = cvpartition(labels,'kfold',nfolds);
+cp = cvpartition_EEG(labels,nfolds);
 
 % initialize some containers to store results
 train_errors = struct('linear',ones(1,nfolds),'diaglinear',ones(1,nfolds),'quadratic',ones(1,nfolds),...
@@ -224,11 +220,10 @@ ROC = struct('linear_x',[],'linear_y',[],'linear_AUC',zeros(nfolds,1),...
 for i=1:nfolds  % big CV loop with all the classifiers!  
     fprintf('CV loop: %i/%i\n',i,nfolds);
     
-    %TODO: replace partitioning with cont. samples!!! -eg. write function cvpartition_EEG to make similar structure that cvpartition
-	test = features_red(cp.test(i),:);
-    train = features_red(cp.training(i),:);
-	labels_test = labels(cp.test(i));
-	labels_train = labels(cp.training(i));
+	test = features_red(cp.test(i,:),:);
+    train = features_red(cp.training(i,:),:);
+	labels_test = labels(cp.test(i,:));
+	labels_train = labels(cp.training(i,:));
     
     % (no clever MATLAB way to update the struct... so let's do it 1 by 1)...
     % linear
