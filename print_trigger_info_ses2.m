@@ -5,7 +5,7 @@ missed = find(cleared_trigger_ses2==16);
 passed = find(cleared_trigger_ses2==48);
 stops = find(cleared_trigger_ses2==255);
 change_missed = find(cleared_trigger_ses2==144);
-change_passed = find(cleared_trigger_ses2==176)
+change_passed = find(cleared_trigger_ses2==176);
 
 for i = 1:15
     start = starts(i);

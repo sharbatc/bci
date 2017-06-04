@@ -46,13 +46,13 @@ end
 change_missed_idx = change_missed_tmp(1);
 for m = change_missed_tmp
 	id = find(change_missed == m) + 1;
-	change_missed_idx = [change_missed_idx, change_missed(id)]
+	change_missed_idx = [change_missed_idx, change_missed(id)];
 end
 
 change_passed_idx = change_passed_tmp(1)
 for n = change_passed_tmp
     id = find(change_passed == n) + 1;
-    change_passed_idx = [change_passed_idx, change_passed(id)]
+    change_passed_idx = [change_passed_idx, change_passed(id)];
 end
 
    
