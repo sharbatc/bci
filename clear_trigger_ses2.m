@@ -1,17 +1,17 @@
-function [cleared_trigger_ses2] = clear_trigger_ses2(trigger)
+function [cleared_trigger_ses2] = clear_trigger_ses2(trigger,down_)
 % finds 15 start and stop points in trigger channel to slice the data
 % + finds 16, 48 for missing and passing points. 128 is for changed
 % waypoint
 
 cleared_trigger_ses2 = zeros(1, size(trigger, 2));
-
+trigger = trigger(:,1:down_:end); %downsample first... will that work? - we already have heavy repetitions...
 trigger = trigger - mode(trigger); % substract the most common value
 start = find(trigger == 1);  % 1 for "start" trial
 missed = find(trigger == 16);  % 16 for changing the waypoint (without passing it)
 passed = find(trigger == 48);  % 48 for passing the waypoint (16+32 = new + prev.passed succesfully)
 stop = find(trigger == 255);  % 255 for "end" trial
-change_missed = find(trigger == 144) % 144 = 16+128 = new + change in waypoint
-change_passed = find(trigger == 176) % 176 = 16+32+128 = new + prev. missed + change in waypoint
+change_missed = find(trigger == 144); % 144 = 16+128 = new + change in waypoint
+change_passed = find(trigger == 176); % 176 = 16+32+128 = new + prev. missed + change in waypoint
 
 
 % eliminate consecutive values ... this is a bit hacky but works fast
@@ -49,7 +49,7 @@ for m = change_missed_tmp
 	change_missed_idx = [change_missed_idx, change_missed(id)];
 end
 
-change_passed_idx = change_passed_tmp(1)
+change_passed_idx = change_passed_tmp(1);
 for n = change_passed_tmp
     id = find(change_passed == n) + 1;
     change_passed_idx = [change_passed_idx, change_passed(id)];

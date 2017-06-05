@@ -24,10 +24,11 @@ labels = [1,2,0,2,1,2,1,1,1,0,0,2,0,0,2];
 
 Fs = 2048;
 
-%% load in data from .bdf - use this for the 1st time!
-[header, channels, eye_channels, biceps_channels, cleared_trigger_ses2] = initialize_ses2(fName);
+%% load in data from .bdf - use this for the 1st time! note that we downsample triggers and channels here...
+down_ = 8;
+[header, channels, eye_channels, biceps_channels, cleared_trigger_ses2] = initialize_ses2(fName,down_);
 saveName = sprintf('%s_2.mat',name);
-data = save_to_mat_ses2(header, labels, channels, eye_channels, biceps_channels, cleared_trigger_ses2, saveName);
+data = save_to_mat_ses2(header, labels, channels, eye_channels, biceps_channels, cleared_trigger_ses2, saveName,down_);
 fprintf('data for ses2 initialized and saved to .mat file!\n')
 
 
@@ -51,15 +52,7 @@ fprintf('ses2 data loaded!\n');
 % trials have 4 matrices, channels, eye_channels, biceps_channels and cleared_trigger (access like: data.t1.channels)
 % feel free to extend with more fields! (data.* = )
 
-%% downsample EEG channels
 
-trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
-down_ = 8; %-> new Fs = 256 Hz
-for i=1:15
-   data.(trials{i}).channels = data.(trials{i}).channels(:,1:down_:end);
-end
-Fs = Fs/down_;
-fprintf('EEG downsampled by %i!\n',down_)
 
 
 %% spatial filtering
@@ -132,10 +125,15 @@ features = [];  % feature matrix; size: size(labels,1) * (64*size(pxx,2)+64*7)
 for i=1:15  % iterates over trials
     %fprintf('processing trial %i!\n',i);
     len_trial = floor(size(data.(trials{i}).channels,2)/Fs);
+    curr_label = 0;
     for k=0:len_trial-1  % iterates over seconds in the trial (1 by 1)
         % add label for every epoch
-        if data.(trials{i}). 
-        labels = [labels; 0];
+        if ((data.(trials{i}).cleared_trigger_ses2(k) == 176 ))
+            curr_label = curr_label + 1;
+        else 
+            curr_label = 0;
+        end
+        labels = [labels; curr_label];
         % calc PSD
         [pxx,f]  = calc_PSD(data.(trials{i}).channels(:,(k*Fs)+1:(k+1)*Fs),Fs);
         % cut pxx at 50Hz
@@ -149,6 +147,6 @@ for i=1:15  % iterates over trials
 end
 
 % save dataset (ready to do machine learning stuffs)
-fName = sprintf('%s_1_ML.mat',name);
+fName = sprintf('%s_2_ML.mat',name);
 save(fName,'labels','features','f');
-fprintf('feature matrix saved!\n')
+fprintf('ses2 feature matrix saved!\n')
