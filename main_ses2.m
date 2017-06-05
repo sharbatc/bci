@@ -25,8 +25,8 @@ labels = [1,2,0,2,1,2,1,1,1,0,0,2,0,0,2];
 Fs = 2048;
 
 %% load in data from .bdf - use this for the 1st time! note that we downsample triggers and channels here...
-down_ = 8;
-[header, channels, eye_channels, biceps_channels, cleared_trigger_ses2] = initialize_ses2(fName,down_);
+down_ = 8; %convert to 256Hz downsampling
+[header, channels, eye_channels, biceps_channels, cleared_trigger_ses2] = initialize_ses2(fName);
 saveName = sprintf('%s_2.mat',name);
 data = save_to_mat_ses2(header, labels, channels, eye_channels, biceps_channels, cleared_trigger_ses2, saveName,down_);
 fprintf('data for ses2 initialized and saved to .mat file!\n')
@@ -38,7 +38,7 @@ clear;
 close all;
 
 mac = 1; % flag for ICA -> change this to 1 on mac!
-
+down_ = 8;
 
 
 name = 'Sharbat';
@@ -52,7 +52,8 @@ fprintf('ses2 data loaded!\n');
 % trials have 4 matrices, channels, eye_channels, biceps_channels and cleared_trigger (access like: data.t1.channels)
 % feel free to extend with more fields! (data.* = )
 
-
+trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'};
+Fs = Fs/down_;
 
 
 %% spatial filtering
@@ -126,12 +127,16 @@ for i=1:15  % iterates over trials
     %fprintf('processing trial %i!\n',i);
     len_trial = floor(size(data.(trials{i}).channels,2)/Fs);
     curr_label = 0;
+    
+    trig_144 = find(data.(trials{i}).trigger== 144);
+    trig_176 = find(data.(trials{i}).trigger==176);
+    trig_change = [trig_144, trig_176];
     for k=0:len_trial-1  % iterates over seconds in the trial (1 by 1)
         % add label for every epoch
-        if ((data.(trials{i}).cleared_trigger_ses2(k) == 176 ))
-            curr_label = curr_label + 1;
-        else 
-            curr_label = 0;
+        for item = trig_change%ensures we detect
+            if (k*Fs<item)&&(item<(k+1)*Fs)
+                curr_label = min(2,curr_label + 1);%min to make sure change not raised more times
+            end
         end
         labels = [labels; curr_label];
         % calc PSD

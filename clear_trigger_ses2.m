@@ -1,10 +1,9 @@
-function [cleared_trigger_ses2] = clear_trigger_ses2(trigger,down_)
+function [cleared_trigger_ses2] = clear_trigger_ses2(trigger)
 % finds 15 start and stop points in trigger channel to slice the data
-% + finds 16, 48 for missing and passing points. 128 is for changed
+% + finds 16, 32 for missing and passing points. 128 is for changed
 % waypoint
 
 cleared_trigger_ses2 = zeros(1, size(trigger, 2));
-trigger = trigger(:,1:down_:end); %downsample first... will that work? - we already have heavy repetitions...
 trigger = trigger - mode(trigger); % substract the most common value
 start = find(trigger == 1);  % 1 for "start" trial
 missed = find(trigger == 16);  % 16 for changing the waypoint (without passing it)
