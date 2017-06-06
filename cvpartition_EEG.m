@@ -10,11 +10,11 @@ assert(size(idx_class1,1) + size(idx_class2,1) == size(labels,1), 'implemented o
 % this will reject some elements... (it's way easier to implement it like this)
 nclass1 = floor(size(idx_class1,1)/nfolds)*nfolds;
 idx_class1 = idx_class1(1:nclass1,1);
-class1 = reshape(idx_class1',nfolds,[]);
+class1 = reshape(idx_class1,[],nfolds)';
 % this will reject some elements... (it's way easier to implement it like this)
 nclass2 = floor(size(idx_class2,1)/nfolds)*nfolds;
 idx_class2 = idx_class2(1:nclass2,1);
-class2 = reshape(idx_class2',nfolds,[])';
+class2 = reshape(idx_class2,[],nfolds)';
 
 % init partitioning
 cp = struct('test',zeros(nfolds,size(class1,2)+size(class2,2)),...
