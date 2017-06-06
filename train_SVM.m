@@ -1,10 +1,7 @@
-function [train_err, test_err, C_train, C_test, ROC_x, ROC_y, AUC] = train_SVM(test, train, labels_test, labels_train)
+function [train_err, test_err, C_train, C_test, ROC_x, ROC_y, AUC, classifier] = train_SVM(test, train, labels_test, labels_train)
 % trains binary support vector machine
 
-labels_train(find(labels_train==0)) = -1; % change 0 to -1 for SVM!
-labels_test(find(labels_test==0)) = -1; % change 0 to -1 for SVM!
-
-SVMModel = fitcsvm(train,labels_train,'Standardize',true,'ClassNames',[-1,1]);  % train calssifier
+SVMModel = fitcsvm(train,labels_train,'Standardize',true,'ClassNames',[0,1]);
 classifier = fitSVMPosterior(SVMModel);  % to get probabilities, not only labels (for ROC curve)
 [yhat,scores] = predict(classifier, test);  % predict test set labels
 

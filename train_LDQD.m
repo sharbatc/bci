@@ -1,4 +1,4 @@
-function [train_err, test_err, C_train, C_test, ROC_x, ROC_y, AUC] = train_LDQD(test, train, labels_test, labels_train, method)
+function [train_err, test_err, C_train, C_test, ROC_x, ROC_y, AUC, classifier] = train_LDQD(test, train, labels_test, labels_train, method)
 % trains classifier (lin., diaglin., quad., diagquad.)
 
 switch method  % train (specified) calssifier
