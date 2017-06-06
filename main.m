@@ -39,12 +39,9 @@ clc;
 clear;
 close all;
 
-mac = 1
-; % flag for ICA -> change this to 1 on mac!
+mac = 1; % flag for ICA -> change this to 1 on mac!
 
-
-%name = 'Andras';
-name = 'Sharbat';
+name = 'Andras';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -189,7 +186,7 @@ close all;
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, name);
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-plot_fisher_topoplot(labels, features, eeglab_path, name);
+%plot_fisher_topoplot(labels, features, eeglab_path, name);
 
 
 %% reduce the number of features (based on Fisher score)
@@ -223,7 +220,7 @@ ROC = struct('linear_x',[],'linear_y',[],'linear_AUC',zeros(nfolds,1),...
              'diagquadratic_x',[],'diagquadratic_y',[],'diagquadratic_AUC',zeros(nfolds,1),...
              'SVM_x',[],'SVM_y',[],'SVM_AUC',zeros(nfolds,1),...
              'NB_x',[],'NB_y',[],'NB_AUC',zeros(nfolds,1),...
-             'best_AUCs',ones(1,6));
+             'best_AUCs',zeros(1,6));
 
 for i=1:nfolds  % big CV loop with all the classifiers!  
     fprintf('CV loop: %i/%i\n',i,nfolds);
@@ -236,46 +233,56 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     % (no clever MATLAB way to update the struct... so let's do it 1 by 1)...
     % linear
     [train_errors.linear(1,i), test_errors.linear(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.linear_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'linear');
+     ROC_x, ROC_y, ROC.linear_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'linear');
     if i == 1 || test_errors.linear(1,i) < min(test_errors.linear(1,1:i-1))
         ROC.linear_x = ROC_x;  ROC.linear_y = ROC_y; ROC.best_AUCs(1,1) = ROC.linear_AUC(i,1);
+        fName = sprintf('classifiers/%s_linear',name);
+        save(fName,'classifier');
     end
     
 	% diaglinear
     [train_errors.diaglinear(1,i), test_errors.diaglinear(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.diaglinear_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'diaglinear');
+     ROC_x, ROC_y, ROC.diaglinear_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'diaglinear');
     if i == 1 || test_errors.diaglinear(1,i) < min(test_errors.diaglinear(1,1:i-1))
         ROC.diaglinear_x = ROC_x;  ROC.diaglinear_y = ROC_y; ROC.best_AUCs(1,2) = ROC.diaglinear_AUC(i,1);
+        fName = sprintf('classifiers/%s_diaglinear',name);
+        save(fName,'classifier');
     end
     
     % quadratic
     [train_errors.quadratic(1,i), test_errors.quadratic(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.quadratic_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'quadratic');
+     ROC_x, ROC_y, ROC.quadratic_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'quadratic');
     if i == 1 || test_errors.quadratic(1,i) < min(test_errors.quadratic(1,1:i-1))
         ROC.quadratic_x = ROC_x;  ROC.quadratic_y = ROC_y; ROC.best_AUCs(1,3) = ROC.quadratic_AUC(i,1);
+        fName = sprintf('classifiers/%s_quadratic',name);
+        save(fName,'classifier');
     end
     
     % diagquadratic
     [train_errors.diagquadratic(1,i), test_errors.diagquadratic(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1)] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
+     ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
     if i == 1 || test_errors.diagquadratic(1,i) < min(test_errors.diagquadratic(1,1:i-1))
         ROC.diagquadratic_x = ROC_x;  ROC.diagquadratic_y = ROC_y; ROC.best_AUCs(1,4) = ROC.diagquadratic_AUC(i,1);
+        fName = sprintf('classifiers/%s_diagquadratic',name);
+        save(fName,'classifier');
     end
                                                                                               
     % SVM
     [train_errors.SVM(1,i), test_errors.SVM(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.SVM_AUC(i,1),SVMModel] = train_SVM(test, train, labels_test, labels_train);
-    class_name=sprintf('SVMclassifier%i',i);
-    saveCompactModel(SVMModel,class_name);
+     ROC_x, ROC_y, ROC.SVM_AUC(i,1), classifier] = train_SVM(test, train, labels_test, labels_train);
     if i == 1 || test_errors.SVM(1,i) < min(test_errors.SVM(1,1:i-1))
         ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y; ROC.best_AUCs(1,5) = ROC.SVM_AUC(i,1);
+        fName = sprintf('classifiers/%s_SVM',name);
+        save(fName,'classifier');
     end
     
     % Naive Bayes
     [train_errors.NB(1,i), test_errors.NB(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.NB_AUC(i,1)] = train_NB(test, train, labels_test, labels_train);
+     ROC_x, ROC_y, ROC.NB_AUC(i,1), classifier] = train_NB(test, train, labels_test, labels_train);
     if i == 1 || test_errors.NB(1,i) < min(test_errors.NB(1,1:i-1))
         ROC.NB_x = ROC_x;  ROC.NB_y = ROC_y; ROC.best_AUCs(1,6) = ROC.NB_AUC(i,1);
+        fName = sprintf('classifiers/%s_NB',name);
+        save(fName,'classifier');
     end
 end
 
@@ -295,5 +302,36 @@ plot_errors(test_errors.linear, test_errors.diaglinear, test_errors.quadratic,..
 plot_ROC(ROC.linear_x, ROC.diaglinear_x, ROC.quadratic_x, ROC.diagquadratic_x, ROC.SVM_x, ROC.NB_x,...
          ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, name, ROC.best_AUCs);
 
-%% load classifiers
-savedClassifier = loadCompactModel('SVMclassifier1');
+
+%% load classifiers (just to test out)
+clear;
+
+% load in dataset
+name = 'Andras';
+fName = sprintf('%s_1_ML.mat',name);
+load(fName);
+% replace 2s with 1s in labels (pool hard & hard with assistance)
+labels(labels == 2) = 1;
+
+% call Fisher and dim. reduction
+[orderedPower, orderedInd] = fisher_rankfeat(features, labels);
+features_reord = features(:,orderedInd);
+keep = 30;
+features_red = features_reord(:,1:keep);
+
+% load in pretrained classifier
+classifiertype = 'linear';
+fName = sprintf('classifiers/%s_%s.mat',name,classifiertype);
+load(fName);
+
+% test classifier
+[yhat,scores] = predict(classifier, features_red);
+test_error = classerror(labels, yhat);
+[ROCx,ROC_y,~,AUC] = perfcurve(labels, scores(:,2), 1);
+
+fprintf('%s: loaded %s classifier - test error: %f, AUC: %f\n',name, classifiertype, test_error, AUC);
+
+
+
+
+

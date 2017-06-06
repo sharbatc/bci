@@ -1,4 +1,4 @@
-function [train_err, test_err, C_train, C_test, ROC_x, ROC_y, AUC] = train_NB(test, train, labels_test, labels_train)
+function [train_err, test_err, C_train, C_test, ROC_x, ROC_y, AUC, classifier] = train_NB(test, train, labels_test, labels_train)
 % trains naive Bayes classifier
 
 classifier = fitcnb(train, labels_train);  % train calssifier
