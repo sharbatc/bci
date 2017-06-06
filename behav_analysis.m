@@ -1,4 +1,4 @@
-function behav_analysis(name, data)
+function behav_analysis(data,name)
 
 % Andras
 if name(1) == 'A'
@@ -38,7 +38,10 @@ assisted_diff = mat(find(labels==1),2);
 hard_diff = mat(find(labels==2),2);
 figure;
 boxplot([easy_diff, assisted_diff, hard_diff],'Labels',{'Easy','Hard + assist', 'Hard'});
-title(sprintf('Perceived difficulty for %s', name));
+title(sprintf('%s: Perceived difficulty', name));
+
+fName = sprintf('pictures/%s_pdifficulty.png',name);
+saveas(gcf, fName);
 
 
 %% User performance boxplot
@@ -70,7 +73,10 @@ hard_succ_rate = hard_passed./(hard_passed+hard_missed);
 
 figure
 boxplot([easy_succ_rate, assist_succ_rate, hard_succ_rate],'Labels',{'Easy','Hard + assist', 'Hard'});
-title(sprintf('User performance for %s', name));
+title(sprintf('%s: User performance', name));
+
+fName = sprintf('pictures/%s_performance.png',name);
+saveas(gcf, fName);
 
 
 end

@@ -1,4 +1,4 @@
-function [train_err, test_err, C_train, C_test, ROC_x, ROC_y, AUC] = train_SVM(test, train, labels_test, labels_train)
+function [train_err, test_err, C_train, C_test, ROC_x, ROC_y, AUC,SVMModel] = train_SVM(test, train, labels_test, labels_train)
 % trains binary support vector machine
 
 labels_train(find(labels_train==0)) = -1; % change 0 to -1 for SVM!

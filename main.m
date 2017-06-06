@@ -55,6 +55,8 @@ fprintf('data loaded!\n');
 % trials have 4 matrices, channels, eye_channels, biceps_channels and cleared_trigger (access like: data.t1.channels)
 % feel free to extend with more fields! (data.* = )
 
+%% Behavioural analysis
+behav_analysis(data, name);
 
 %% downsample EEG channels
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
@@ -262,7 +264,9 @@ for i=1:nfolds  % big CV loop with all the classifiers!
                                                                                               
     % SVM
     [train_errors.SVM(1,i), test_errors.SVM(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.SVM_AUC(i,1)] = train_SVM(test, train, labels_test, labels_train);
+     ROC_x, ROC_y, ROC.SVM_AUC(i,1),SVMModel] = train_SVM(test, train, labels_test, labels_train);
+    class_name=sprintf('SVMclassifier%i',i);
+    saveCompactModel(SVMModel,class_name);
     if i == 1 || test_errors.SVM(1,i) < min(test_errors.SVM(1,1:i-1))
         ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y; ROC.best_AUCs(1,5) = ROC.SVM_AUC(i,1);
     end
@@ -291,3 +295,5 @@ plot_errors(test_errors.linear, test_errors.diaglinear, test_errors.quadratic,..
 plot_ROC(ROC.linear_x, ROC.diaglinear_x, ROC.quadratic_x, ROC.diagquadratic_x, ROC.SVM_x, ROC.NB_x,...
          ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, name, ROC.best_AUCs);
 
+%% load classifiers
+savedClassifier = loadCompactModel('SVMclassifier1');
