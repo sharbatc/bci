@@ -9,6 +9,7 @@ hold on;
 scatter3(features_red(find(labels==1),1),features_red(find(labels==1),2),features_red(find(labels==1),3),'r','filled');
 title(sprintf('%s: Best 3 features', name));
 legend('easy', 'hard');
+set(gca,'fontsize',13);
 
 fName = sprintf('pictures/%s_plot3D.png',name);
 saveas(gcf, fName);

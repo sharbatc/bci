@@ -19,6 +19,8 @@ title(sprintf('%s: Fisher score', name));
 xlabel('features');
 ylabel('electrodes');
 colorbar;
+set(gca,'fontsize',15);
+
 
 fName = sprintf('pictures/%s_disc.png',name);
 saveas(gcf, fName);

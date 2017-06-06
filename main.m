@@ -185,7 +185,9 @@ close all;
 %% Fisher's score:
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, name);
-eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+eeglab_path = 'eeglab14_1_0b';
+plot_fisher_topoplot(labels, features, eeglab_path, name);
+%eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
 %plot_fisher_topoplot(labels, features, eeglab_path, name);
 
 
@@ -260,7 +262,14 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     
     % diagquadratic
     [train_errors.diagquadratic(1,i), test_errors.diagquadratic(1,i), ~, ~,...
+<<<<<<< HEAD
+     ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1),classifier] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
+    class_name=sprintf('LDQDclassifier%i.mat',i);
+    save('LDQDclassifier.mat')
+    %save(class_name,classifier);
+=======
      ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
+>>>>>>> 9ebe7b51b13f1b35abe2b935b690b8105b474236
     if i == 1 || test_errors.diagquadratic(1,i) < min(test_errors.diagquadratic(1,1:i-1))
         ROC.diagquadratic_x = ROC_x;  ROC.diagquadratic_y = ROC_y; ROC.best_AUCs(1,4) = ROC.diagquadratic_AUC(i,1);
         fName = sprintf('classifiers/%s_diagquadratic',name);
@@ -269,7 +278,13 @@ for i=1:nfolds  % big CV loop with all the classifiers!
                                                                                               
     % SVM
     [train_errors.SVM(1,i), test_errors.SVM(1,i), ~, ~,...
+<<<<<<< HEAD
+    ROC_x, ROC_y, ROC.SVM_AUC(i,1),SVMModel] = train_SVM(test, train, labels_test, labels_train);
+    class_name=sprintf('SVMclassifier%i',i);
+    saveCompactModel(SVMModel,class_name);
+=======
      ROC_x, ROC_y, ROC.SVM_AUC(i,1), classifier] = train_SVM(test, train, labels_test, labels_train);
+>>>>>>> 9ebe7b51b13f1b35abe2b935b690b8105b474236
     if i == 1 || test_errors.SVM(1,i) < min(test_errors.SVM(1,1:i-1))
         ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y; ROC.best_AUCs(1,5) = ROC.SVM_AUC(i,1);
         fName = sprintf('classifiers/%s_SVM',name);

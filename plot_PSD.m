@@ -41,9 +41,11 @@ for c=0:63  % iterates over every channel (1 figure will be saved for all channe
     avg_easy = plot(f,mean(pxx_easy,1),'b-','LineWidth',2);
     hold on;
     avg_hard = plot(f,mean(pxx_hard,1),'r-','LineWidth',2);
+
     
     legend([avg_easy, avg_hard],{'mean(easy)','mean(hard)'});
     title(sprintf('%s electrode:%i',name,c+1));
+    set(gca,'fontsize',15);
     xlabel('freq (Hz)');
     xlim([3,45]);
     ylabel('pxx (dB)');

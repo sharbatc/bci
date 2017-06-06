@@ -10,6 +10,7 @@ hold on;
 plot(xlim,[0.1,0.1],'k--');
 title(sprintf('%s: %s errors (%i-fold CV)',name,mode,nfolds));
 ylabel('classerror');
+set(gca,'fontsize',13);
 
 fName = sprintf('pictures/%s_%s_err.png',name,mode);
 saveas(gcf, fName);
