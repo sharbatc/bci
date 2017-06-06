@@ -1,31 +1,25 @@
 function behav_analysis(data,name)
 
-% Andras
-if name(1) == 'A'
-addpath('/Users/elisabettamessina/Desktop/EPFL2sem/bci/BCI_project/Group_AMES/1_Andras22032017');
+switch name
+    case 'Andras'
+        addpath('/Users/elisabettamessina/Desktop/EPFL2sem/bci/BCI_project/Group_AMES/1_Andras22032017');
+        quest = readtext('ag2_22032017_questionnaire.csv');
+        labels = [0,2,0,1,2,2,0,0,0,1,1,1,2,2,1]; % Andras' 1st
 
-quest = readtext('ag2_22032017_questionnaire.csv');
-labels = [0,2,0,1,2,2,0,0,0,1,1,1,2,2,1]; % Andras' 1st
-
-% Mariana
-elseif name(1) == 'M'
-addpath('/Users/elisabettamessina/Desktop/EPFL2sem/bci/BCI_project/Group_AMES/1_Mariana1332017');
-
-quest= readtext('ad10_13032017_questionnaire.csv');
-labels = [0,2,0,0,2,0,2,2,1,1,1,1,2,1,0]; % Mariana's 1st
+    case 'Mariana'
+        addpath('/Users/elisabettamessina/Desktop/EPFL2sem/bci/BCI_project/Group_AMES/1_Mariana1332017');
+        quest= readtext('ad10_13032017_questionnaire.csv');
+        labels = [0,2,0,0,2,0,2,2,1,1,1,1,2,1,0]; % Mariana's 1st
  
-% Sharby
-elseif name(1) == 'S'
-addpath('/Users/elisabettamessina/Desktop/EPFL2sem/bci/BCI_project/Group_AMES/1_Sharbath8032017');
+    case 'Sharbat'
+        addpath('/Users/elisabettamessina/Desktop/EPFL2sem/bci/BCI_project/Group_AMES/1_Sharbath8032017');
+        quest = readtext('questionaire_08032017.csv');
+        labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2]; % Sharbat's 1st
 
-quest = readtext('questionaire_08032017.csv');
-labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2]; % Sharbat's 1st
-
-% Elisabetta
-elseif name(1) == 'E'
-addpath('/Users/elisabettamessina/Desktop/EPFL2sem/bci/BCI_project/Group_AMES/1_Elisabetta220317');
-quest =readtext('ag1_22032017_questionnaire.csv');
-labels = [0,1,2,0,2,0,1,1,2,2,1,0,0,2,1]; % Elisabetta's 1st
+    case 'Elisabetta'
+        addpath('/Users/elisabettamessina/Desktop/EPFL2sem/bci/BCI_project/Group_AMES/1_Elisabetta220317');
+        quest =readtext('ag1_22032017_questionnaire.csv');
+        labels = [0,1,2,0,2,0,1,1,2,2,1,0,0,2,1]; % Elisabetta's 1st
 end
 
 
@@ -39,6 +33,7 @@ hard_diff = mat(find(labels==2),2);
 figure;
 boxplot([easy_diff, assisted_diff, hard_diff],'Labels',{'Easy','Hard + assist', 'Hard'});
 title(sprintf('%s: Perceived difficulty', name));
+set(gca,'fontsize',13);
 
 fName = sprintf('pictures/%s_pdifficulty.png',name);
 saveas(gcf, fName);
@@ -74,6 +69,7 @@ hard_succ_rate = hard_passed./(hard_passed+hard_missed);
 figure
 boxplot([easy_succ_rate, assist_succ_rate, hard_succ_rate],'Labels',{'Easy','Hard + assist', 'Hard'});
 title(sprintf('%s: User performance', name));
+set(gca,'fontsize',13);
 
 fName = sprintf('pictures/%s_performance.png',name);
 saveas(gcf, fName);

@@ -32,10 +32,12 @@ set(gcf,'units','points','position',[100,100,1000,500]);
 subplot(1,2,1);
 topoplot((power_easy-mean(power_easy)), 'eeglab_chan64_2.elp');
 colorbar
+set(gca,'fontsize',15);
 title(sprintf('%s: power - easy trials',name));
 subplot(1,2,2);
 topoplot((power_hard-mean(power_hard)), 'eeglab_chan64_2.elp');
 colorbar
+set(gca,'fontsize',13);
 title(sprintf('%s: power - hard trials',name));
 
 fName = sprintf('pictures/%s_power.png',name);
@@ -44,6 +46,7 @@ saveas(gcf, fName);
 % take the difference!
 figure;
 topoplot((power_easy-power_hard-mean(power_easy-power_hard)), 'eeglab_chan64_2.elp');  % not Fisher score! (just the difference of the 2 prev plots)
+set(gca,'fontsize',13);
 colorbar
 title(sprintf('%s: power disc. chans (easy-hard)',name));
 
