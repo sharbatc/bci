@@ -60,7 +60,7 @@ fprintf('ses2 data loaded!\n');
 
 
 %% spatial filtering
-% always do spatial filtering first!
+% always do spatial filtering first! not quite sure now
 for i=1:15
    data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'Laplacian');
 end
@@ -77,8 +77,8 @@ fprintf('temporal filtering done!\n')
 
 %% apply ICA
 % it's pretty slow!
-eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-%eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
+% eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
 addpath(sprintf('%s/functions/sigprocfunc',eeglab_path));
 ncomponents = 50; % number of components to keep (change this to avoid complex values)
 for i=1:15
@@ -93,6 +93,7 @@ fprintf('ICA decomposition done!\n')
 %% check correlation: ICA activations with (horizontal & vertical) eye movement
 ses = 2;  % session ID for figures...
 threshold = 2;  % 2*std
+down_ = 8;
 for i=1:15
     [horizontal_corr, vertical_corr] = check_correlation(data.(trials{i}).ICAactivations, data.(trials{i}).eye_channels,...
                                                          down_, threshold, eeglab_path, ses, i, name);
@@ -124,7 +125,7 @@ close all;
 
 ses = 2;  % session ID
 name = 'Elisabetta';
-fName = sprintf('%s_%i_preprocessed.mat',name,ses);
+fName = sprintf('%s_2_preprocessed.mat',name);
 load(fName);
 
 
@@ -208,6 +209,7 @@ close all;
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, ses, name);
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+%eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0';
 %plot_fisher_topoplot(labels, features, eeglab_path, ses, name);
 
 

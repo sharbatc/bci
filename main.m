@@ -7,10 +7,12 @@ close all;
 % labels are hard coded...
 %name = 'Elisabetta';
 %fName = '/home/bandi/EPFL/BCI/ag1_22032017.bdf'; % Elisabetta's 1st
+% fName = '/Users/sharbatc/Academia/Projects/BCI/data/ag1_22032017.bdf';
 %labels = [0,1,2,0,2,0,1,1,2,2,1,0,0,2,1];
 
 %name = 'Mariana';
 %fName = '/home/bandi/EPFL/BCI/ad10_13032017.bdf'; % Mariana's 1st
+% fName = '/Users/sharbatc/Academia/Projects/BCI/data/ad10_13032017.bdf';
 %labels = [0,2,0,0,2,0,2,2,1,1,1,1,2,1,0];
 
 % name = 'Sharbat';
@@ -19,7 +21,8 @@ close all;
 % labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2];
 
 name = 'Andras';
-fName = '/home/bandi/EPFL/BCI/ag2_22032017.bdf'; % Andras' 1st
+% fName = '/home/bandi/EPFL/BCI/ag2_22032017.bdf'; % Andras' 1st
+fName = '/Users/sharbatc/Academia/Projects/BCI/data/ag2_22032017.bdf';
 labels = [0,2,0,1,2,2,0,0,0,1,1,1,2,2,1];
 
 Fs = 2048;
@@ -53,6 +56,13 @@ fprintf('data loaded!\n');
 
 %% Behavioural analysis
 behav_analysis(data, name);  % works only on Elisabetta's
+
+%% look at the signals before any filtering
+trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
+
+for elecnum=1:64
+   plot_electrode(data.t1.channels(elecnum,:))
+end
 
 
 %% downsample EEG channels
