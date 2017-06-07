@@ -126,6 +126,7 @@ try
         [feature, artifact] = fun_extract(user, buffer.eeg, baseline(:, 1, :));
         
         
+        
 		%% !!! IMPLEMENT THIS FUNCTION% Classification
         [class, proab] = fun_classify(user.classifier, feature);
         
@@ -210,7 +211,11 @@ end
 
 % !!! generate your feature vector, and also output whether there is artifact if you want
 function [feature, artifact] = fun_extract(user, eeg, baseline)
-
+    [pxx,f] = calc_PSD(eegchannel,Fs);
+    f = find(2 <= f & f <= 45)
+    pxx = pxx(:,f);
+    relative_powers = calc_powers(f, pxx);
+    feature = [feature; reshape(pxx.',1,[]), reshape(relative_powers.',1,[])]
 end
 
 % !!! It is suggested to output proability
@@ -238,9 +243,9 @@ end
 % Therefore, it is possible to do something like IIR or nonlinear processing on the final output.
 th = load('./threshold_integration');
 if proab >  th(1) 
-    output = 0;
-elseif proab < th(2)
     output = 2;
+elseif proab < th(2)
+    output = 0;
 else
     output = 1;
 end
