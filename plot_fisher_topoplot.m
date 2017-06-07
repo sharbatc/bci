@@ -1,4 +1,4 @@
-function plot_fisher_topoplot(labels, features, eeglab_path, name)
+function plot_fisher_topoplot(labels, features, eeglab_path, ses, name)
 % plots integral of the whole power, projected to the scalp
 
 addpath(sprintf('%s/functions/sigprocfunc',eeglab_path),...   
@@ -26,32 +26,31 @@ end
 power_easy = mean(power_easy,2);
 power_hard = mean(power_hard,2);
 
-
 figure;
+set(gca,'fontsize',13);
 set(gcf,'units','points','position',[100,100,1000,500]);
+
 subplot(1,2,1);
 topoplot((power_easy-mean(power_easy)), 'eeglab_chan64_2.elp');
-colorbar
 set(gca,'fontsize',15);
-title(sprintf('%s: power - easy trials',name));
+title(sprintf('%s: power - easy trials, session:%i',name,ses));
 subplot(1,2,2);
 topoplot((power_hard-mean(power_hard)), 'eeglab_chan64_2.elp');
-colorbar
-set(gca,'fontsize',13);
-title(sprintf('%s: power - hard trials',name));
 
-fName = sprintf('pictures/%s_power.png',name);
+title(sprintf('%s: power - hard trials, session:%i',name,ses));
+
+fName = sprintf('pictures/s%i_%s_power.png',ses,name);
 saveas(gcf, fName);
 
 % take the difference!
 figure;
-topoplot((power_easy-power_hard-mean(power_easy-power_hard)), 'eeglab_chan64_2.elp');  % not Fisher score! (just the difference of the 2 prev plots)
 set(gca,'fontsize',13);
-colorbar
-title(sprintf('%s: power disc. chans (easy-hard)',name));
+
+topoplot((power_easy-power_hard-mean(power_easy-power_hard)), 'eeglab_chan64_2.elp');  % not Fisher score! (just the difference of the 2 prev plots)
+title(sprintf('%s: power disc. chans (easy-hard) session:%i',name,ses));
 
 
-fName = sprintf('pictures/%s_power2.png',name);
+fName = sprintf('pictures/s%i_%s_power2.png',ses,name);
 saveas(gcf, fName);
 
 end

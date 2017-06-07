@@ -1,4 +1,4 @@
-function [horizontal_corr, vertical_corr] = check_correlation(ICAcomponents, eye_channels, down, threshold, eeglab_path, trial, name)
+function [horizontal_corr, vertical_corr] = check_correlation(ICAcomponents, eye_channels, down, threshold, eeglab_path, ses, trial, name)
 % checks the correlation of the channels with EOG  (zscore + scalar product)
 
 filtered_EOG = filter_EOG(eye_channels, down);
@@ -17,9 +17,9 @@ for i=1:ncomponents
     eye_movement_corr(2,i) = chan * vertical_eye_movement';    
 end
 
-plot_correlation(eye_movement_corr, threshold, trial, name);
+plot_correlation(eye_movement_corr, threshold, ses, trial, name);
 if ncomponents == 64
-    plot_corr_topoplot(eye_movement_corr, eeglab_path, trial, name);
+    plot_corr_topoplot(eye_movement_corr, eeglab_path, ses, trial, name);
 end
 
 % check for high correlation

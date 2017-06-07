@@ -1,4 +1,4 @@
-function plot_PSD(labels, PSD, f, name)
+function plot_PSD(labels, PSD, f, ses, name)
 % plots out some random PSD for all channels (both easy and hard)
 
 len_PSD = size(PSD,2)/64;
@@ -18,7 +18,7 @@ rnd_PSD_hard = PSD(rnd_sample_hard,:);
 
 for c=0:63  % iterates over every channel (1 figure will be saved for all channels)
 	figure('visible', 'off');
-    set(gcf,'units','points','position',[100,100,1000,800]);
+    set(gcf,'units','points','position',[100,100,700,500]);
     
 	pxx_easy = rnd_PSD_easy(:,(c*len_PSD)+1:(c+1)*len_PSD);
     min_easy = min(pxx_easy, [], 1);
@@ -41,16 +41,15 @@ for c=0:63  % iterates over every channel (1 figure will be saved for all channe
     avg_easy = plot(f,mean(pxx_easy,1),'b-','LineWidth',2);
     hold on;
     avg_hard = plot(f,mean(pxx_hard,1),'r-','LineWidth',2);
-
     
     legend([avg_easy, avg_hard],{'mean(easy)','mean(hard)'});
-    title(sprintf('%s electrode:%i',name,c+1));
-    set(gca,'fontsize',15);
+    title(sprintf('%s electrode:%i, session:%i',name,c+1,ses));
     xlabel('freq (Hz)');
     xlim([3,45]);
     ylabel('pxx (dB)');
+    set(gca,'fontsize',15);
     
-    fName = sprintf('pictures/PSD/%s_el_%i.png',name,c+1);
+    fName = sprintf('pictures/PSD/s%i_%s_el_%i.png',ses,name,c+1);
 	saveas(gcf, fName)
 end
 

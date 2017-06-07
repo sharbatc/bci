@@ -1,4 +1,4 @@
-function disc = plot_fisher(orderedPower, orderedInd, name)
+function disc = plot_fisher(orderedPower, orderedInd, ses, name)
 % plots the discriminant power (calculated by Fisher score of the channels)
 % organize features into a matrix again -> 64*size(PSD) matrix
 
@@ -13,16 +13,17 @@ band_powers = disc_tmp(end-(64*7)+1:end); % 7 is hard coded for 1+6diff bands (s
 disc = [reshape(pxx,[],64)', reshape(band_powers,7,64)'];
 
 figure;
+set(gcf,'units','points','position',[100,100,700,500]);
+
 colormap jet;
 imagesc(disc);
-title(sprintf('%s: Fisher score', name));
+title(sprintf('%s: Fisher score, session:%i', name,ses));
 xlabel('features');
 ylabel('electrodes');
 colorbar;
 set(gca,'fontsize',15);
 
-
-fName = sprintf('pictures/%s_disc.png',name);
+fName = sprintf('pictures/s%i_%s_disc.png',ses,name);
 saveas(gcf, fName);
 
 end

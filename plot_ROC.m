@@ -1,9 +1,12 @@
 function plot_ROC(fp_linear, fp_diaglinear, fp_quadratic, fp_diagquadratic, fp_SVM, fp_NB,...
-                  tp_linear, tp_diaglinear, tp_quadratic, tp_diagquadratic, tp_SVM, tp_NB, name, AUC)
+                  tp_linear, tp_diaglinear, tp_quadratic, tp_diagquadratic, tp_SVM, tp_NB, ses, name, AUC)
 % plots Reciever Operating Characteristic (ROC) curve
 % see more: https://en.wikipedia.org/wiki/Receiver_operating_characteristic
 
 figure;
+set(gca,'fontsize',15);
+set(gcf,'units','points','position',[100,100,700,500]);
+
 plot(fp_linear, tp_linear,'LineWidth',2);
 hold on;
 plot(fp_diaglinear, tp_diaglinear,'LineWidth',2);
@@ -17,8 +20,7 @@ hold on;
 plot(fp_NB, tp_NB,'LineWidth',2);
 hold on;
 plot([0,1], [0,1], 'k--');
-title(sprintf('%s: ROC curve (best in CV)',name))
-set(gca,'fontsize',13);
+title(sprintf('%s: ROC curve (best in CV), session:%i',name,ses))
 legend(sprintf('linear AUC: %.3f',AUC(1)),...
        sprintf('diaglinear AUC: %.3f', AUC(2)),...
        sprintf('quadratic AUC: %.3f', AUC(3)),...
@@ -30,7 +32,7 @@ xlim([0,1]);
 ylabel('True positive rate');
 ylim([0,1]);
 
-fName = sprintf('pictures/%s_ROC.png',name);
+fName = sprintf('pictures/s%i,%s_ROC.png',ses,name);
 saveas(gcf, fName);
 
 end
