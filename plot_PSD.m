@@ -43,11 +43,13 @@ for c=0:63  % iterates over every channel (1 figure will be saved for all channe
     avg_hard = plot(f,mean(pxx_hard,1),'r-','LineWidth',2);
     
     legend([avg_easy, avg_hard],{'mean(easy)','mean(hard)'});
+    legend boxoff
     title(sprintf('%s electrode:%i, session:%i',name,c+1,ses));
     xlabel('freq (Hz)');
     xlim([3,45]);
     ylabel('pxx (dB)');
-    set(gca,'fontsize',15);
+    set(gca,'fontsize',15,'box','off','TickDir','out','TickLength',[.02 .02],...
+        'XMinorTick','on','YMinorTick','on','XColor',[.3 .3 .3],'YColor',[.3 .3 .3]);
     
     fName = sprintf('pictures/PSD/s%i_%s_el_%i.png',ses,name,c+1);
 	saveas(gcf, fName)

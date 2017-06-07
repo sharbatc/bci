@@ -21,7 +21,8 @@ title(sprintf('%s: Fisher score, session:%i', name,ses));
 xlabel('features');
 ylabel('electrodes');
 colorbar;
-set(gca,'fontsize',15);
+set(gca,'fontsize',15,'box','off','TickDir','out','TickLength',[.02 .02],...
+    'XMinorTick','on','YMinorTick','on','XColor',[.3 .3 .3],'YColor',[.3 .3 .3]);
 
 fName = sprintf('pictures/s%i_%s_disc.png',ses,name);
 saveas(gcf, fName);

@@ -33,7 +33,8 @@ hard_diff = mat(find(labels==2),2);
 figure;
 boxplot([easy_diff, assisted_diff, hard_diff],'Labels',{'Easy','Hard + assist', 'Hard'});
 title(sprintf('%s: Perceived difficulty', name));
-set(gca,'fontsize',13);
+set(gca,'fontsize',15,'box','off','TickDir','out','TickLength',[.02 .02],...
+    'YMinorTick','on','XColor',[.3 .3 .3],'YColor',[.3 .3 .3]);
 
 fName = sprintf('pictures/%s_pdifficulty.png',name);
 saveas(gcf, fName);

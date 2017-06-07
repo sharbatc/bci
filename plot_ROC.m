@@ -19,18 +19,20 @@ hold on;
 plot(fp_NB, tp_NB,'LineWidth',2);
 hold on;
 plot([0,1], [0,1], 'k--');
-title(sprintf('%s: ROC curve (best in CV), session:%i',name,ses))
+title(sprintf('%s: ROC curve (best in CV), session:%i',name,ses));
 legend(sprintf('linear AUC: %.3f',AUC(1)),...
        sprintf('diaglinear AUC: %.3f', AUC(2)),...
        sprintf('quadratic AUC: %.3f', AUC(3)),...
        sprintf('diagquadratic AUC: %.3f', AUC(4)),...
        sprintf('SVM AUC: %.3f', AUC(5)),...
-       sprintf('Naive Bayes AUC: %.3f', AUC(6)));
+       sprintf('Naive Bayes AUC: %.3f', AUC(6)),'Location','southeast');
+legend boxoff
 xlabel('False positive rate');
 xlim([0,1]);
 ylabel('True positive rate');
 ylim([0,1]);
-set(gca,'fontsize',15);
+set(gca,'fontsize',15,'box','off','TickDir','out','TickLength',[.02 .02],...
+    'XMinorTick','on','YMinorTick','on','XColor',[.3 .3 .3],'YColor',[.3 .3 .3]);
 
 fName = sprintf('pictures/s%i_%s_ROC.png',ses,name);
 saveas(gcf, fName);

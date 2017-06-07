@@ -21,7 +21,9 @@ xlim([1,ncomponents]);
 ylabel('corr. with eye movement (zscore + scalar product)')
 title(sprintf('%s: Artefact removal (eye movement) session:%i, trial:%i',name, ses, trial))
 legend('horizontal', 'vertical');
-set(gca,'fontsize',15);
+legend boxoff;
+set(gca,'fontsize',15,'box','off','TickDir','out','TickLength',[.02 .02],...
+	'XMinorTick','on','YMinorTick','on','XColor',[.3 .3 .3],'YColor',[.3 .3 .3]);
 
 fName = sprintf('pictures/corr/s%i_%s_t%i_ICA_corr.png', ses, name, trial);
 saveas(gcf, fName);

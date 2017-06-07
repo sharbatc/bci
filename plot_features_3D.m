@@ -11,7 +11,8 @@ hold on;
 scatter3(features_red(find(labels==1),1),features_red(find(labels==1),2),features_red(find(labels==1),3),'r','filled');
 title(sprintf('%s: Best 3 features, session:%i', name,ses));
 legend('easy', 'hard');
-set(gca,'fontsize',15);
+    set(gca,'fontsize',15,'box','off','TickDir','out','TickLength',[.02 .02],...
+        'XMinorTick','on','YMinorTick','on','XColor',[.3 .3 .3],'YColor',[.3 .3 .3]);
 
 fName = sprintf('pictures/s%i_%s_plot3D.png',ses,name);
 saveas(gcf, fName);

@@ -12,7 +12,8 @@ hold on;
 plot(xlim,[0.1,0.1],'k--');
 title(sprintf('%s: %s errors (%i-fold CV), session:%i',name,mode,nfolds,ses));
 ylabel('classerror');
-set(gca,'fontsize',15);
+set(gca,'fontsize',15,'box','off','TickDir','out','TickLength',[.02 .02],...
+    'YMinorTick','on','XColor',[.3 .3 .3],'YColor',[.3 .3 .3]);
 
 fName = sprintf('pictures/s%i_%s_%s_err.png',ses,name,mode);
 saveas(gcf, fName);
