@@ -1,11 +1,8 @@
-function data = save_to_mat_ses2(header, labels, channels, eye_channels, biceps_channels, cleared_trigger_ses2, fName, down_)
+function data = save_to_mat_ses2(header, channels, eye_channels, biceps_channels, cleared_trigger_ses2, fName, down_)
 % saves the 15 trials into a struct of structs and that to a mat-file -> easier to load in
-
-assert(size(labels,2) == 15, 'Use 15 labels!');
 
 data = struct();
 data.header = header;
-data.labels = labels;
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
 
 for i=1:15

@@ -1,34 +1,33 @@
-% main file for BCI project #ames !
-% last update: 01/06 - Andras
-
-%% Use this always =)
+% main file for BCI project - 1st session #ames !
 
 clc;
 clear;
 close all;
 
-mac = 1; % flag for ICA -> change this to 1 on mac!
-
 % labels are hard coded...
 %name = 'Elisabetta';
 %fName = '/home/bandi/EPFL/BCI/ag1_22032017.bdf'; % Elisabetta's 1st
-%labels = [0,1,2,0,2,0,1,1,2,2,1,0,0,2,1]; % Elisabetta's 1st
+%labels = [0,1,2,0,2,0,1,1,2,2,1,0,0,2,1];
+
 %name = 'Mariana';
 %fName = '/home/bandi/EPFL/BCI/ad10_13032017.bdf'; % Mariana's 1st
-%labels = [0,2,0,0,2,0,2,2,1,1,1,1,2,1,0]; % Mariana's 1st
+%labels = [0,2,0,0,2,0,2,2,1,1,1,1,2,1,0];
+
 % name = 'Sharbat';
 % fName = '/home/bandi/EPFL/BCI/ad3_08032017.bdf'; % Sharbat's 1st
 % fName = '/Users/sharbatc/Academia/Projects/BCI/data/ad3_08032017.bdf';
-% labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2]; % Sharbat's 1st
+% labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2];
+
 name = 'Andras';
 fName = '/home/bandi/EPFL/BCI/ag2_22032017.bdf'; % Andras' 1st
-labels = [0,2,0,1,2,2,0,0,0,1,1,1,2,2,1]; % Andras' 1st
-
+labels = [0,2,0,1,2,2,0,0,0,1,1,1,2,2,1];
 
 Fs = 2048;
 
+
 %% load in data from .bdf - use this for the 1st time!
 [header, channels, eye_channels, biceps_channels, cleared_trigger] = initialize(fName);
+
 saveName = sprintf('%s_1.mat',name);
 data = save_to_mat(header, labels, channels, eye_channels, biceps_channels, cleared_trigger, saveName);
 fprintf('data initialized and saved to .mat file!\n')
@@ -53,7 +52,8 @@ fprintf('data loaded!\n');
 % feel free to extend with more fields! (data.* = )
 
 %% Behavioural analysis
-behav_analysis(data, name);
+behav_analysis(data, name);  % works only on Elisabetta's
+
 
 %% downsample EEG channels
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
@@ -83,24 +83,25 @@ fprintf('temporal filtering done!\n')
 
 %% apply ICA
 % it's pretty slow!
-%eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
+eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+%eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
 addpath(sprintf('%s/functions/sigprocfunc',eeglab_path));
-ncomponents = 45; % number of components to keep (change this to avoid complex values)
+ncomponents = 50; % number of components to keep (change this to avoid complex values)
 for i=1:15
     fprintf('decomposing trial %i!\n',i);
-    % calculate weight matrix   
     [data.(trials{i}).ICAactivations, data.(trials{i}).W, data.(trials{i}).invW] = ICA(data.(trials{i}).channels, ncomponents, mac);
     assert(isreal(data.(trials{i}).ICAactivations) == 1, 'Complex values after ICA, consider using less components!')
+    %TODO: add ICA weight saving!
 end
 fprintf('ICA decomposition done!\n')
 
 
 %% check correlation: ICA activations with (horizontal & vertical) eye movement
+ses = 1;  % session ID for figures...
 threshold = 2;  % 2*std
 for i=1:15
     [horizontal_corr, vertical_corr] = check_correlation(data.(trials{i}).ICAactivations, data.(trials{i}).eye_channels,...
-                                                         down_, threshold, eeglab_path, i, name);
+                                                         down_, threshold, eeglab_path, ses, i, name);
     data.(trials{i}).remove = union(horizontal_corr, vertical_corr);                                            
 end
 close all;
@@ -168,9 +169,12 @@ fprintf('feature matrix saved!\n')
 clc;
 clear;
 close all;
+
+ses = 1;  % session ID
 name = 'Andras';
-fName = sprintf('%s_1_ML.mat',name);
+fName = sprintf('%s_%i_ML.mat',name,ses);
 load(fName);
+
 % replace 2s with 1s in labels (pool hard & hard with assistance)
 labels(labels == 2) = 1;
 
@@ -178,17 +182,15 @@ labels(labels == 2) = 1;
 %% plot PSD...
 % plots 10 random easy and 10 random hard trial PSDs for the same electrodes
 features_PSD = features(:,1:end-(64*7)); % 7 is hard coded for 1+6diff bands (see calc_powers.m)
-plot_PSD(labels, features_PSD, f, name)
+plot_PSD(labels, features_PSD, f, ses, name)
 close all;
 
 
 %% Fisher's score:
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
-disc = plot_fisher(orderedPower, orderedInd, name);
-eeglab_path = 'eeglab14_1_0b';
-plot_fisher_topoplot(labels, features, eeglab_path, name);
-%eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-%plot_fisher_topoplot(labels, features, eeglab_path, name);
+disc = plot_fisher(orderedPower, orderedInd, ses, name);
+eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+%plot_fisher_topoplot(labels, features, eeglab_path, ses, name);
 
 
 %% reduce the number of features (based on Fisher score)
@@ -200,7 +202,7 @@ features_red = features_reord(:,1:keep);
 
 %% 3D plot of reduced features
 features_plot3d = features_red(:,1:3);
-plot_features_3D(labels, features_plot3d, name)
+plot_features_3D(labels, features_plot3d, ses, name);
 
 
 %% train (multiple) classifiers
@@ -238,7 +240,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
      ROC_x, ROC_y, ROC.linear_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'linear');
     if i == 1 || test_errors.linear(1,i) < min(test_errors.linear(1,1:i-1))
         ROC.linear_x = ROC_x;  ROC.linear_y = ROC_y; ROC.best_AUCs(1,1) = ROC.linear_AUC(i,1);
-        fName = sprintf('classifiers/%s_linear',name);
+        fName = sprintf('classifiers/s%i_%s_linear',ses,name);
         save(fName,'classifier');
     end
     
@@ -247,7 +249,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
      ROC_x, ROC_y, ROC.diaglinear_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'diaglinear');
     if i == 1 || test_errors.diaglinear(1,i) < min(test_errors.diaglinear(1,1:i-1))
         ROC.diaglinear_x = ROC_x;  ROC.diaglinear_y = ROC_y; ROC.best_AUCs(1,2) = ROC.diaglinear_AUC(i,1);
-        fName = sprintf('classifiers/%s_diaglinear',name);
+        fName = sprintf('classifiers/s%i_%s_diaglinear',ses,name);
         save(fName,'classifier');
     end
     
@@ -256,38 +258,25 @@ for i=1:nfolds  % big CV loop with all the classifiers!
      ROC_x, ROC_y, ROC.quadratic_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'quadratic');
     if i == 1 || test_errors.quadratic(1,i) < min(test_errors.quadratic(1,1:i-1))
         ROC.quadratic_x = ROC_x;  ROC.quadratic_y = ROC_y; ROC.best_AUCs(1,3) = ROC.quadratic_AUC(i,1);
-        fName = sprintf('classifiers/%s_quadratic',name);
+        fName = sprintf('classifiers/s%i_%s_quadratic',ses,name);
         save(fName,'classifier');
     end
     
     % diagquadratic
     [train_errors.diagquadratic(1,i), test_errors.diagquadratic(1,i), ~, ~,...
-<<<<<<< HEAD
      ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1),classifier] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
-    class_name=sprintf('LDQDclassifier%i.mat',i);
-    save('LDQDclassifier.mat')
-    %save(class_name,classifier);
-=======
-     ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
->>>>>>> 9ebe7b51b13f1b35abe2b935b690b8105b474236
     if i == 1 || test_errors.diagquadratic(1,i) < min(test_errors.diagquadratic(1,1:i-1))
         ROC.diagquadratic_x = ROC_x;  ROC.diagquadratic_y = ROC_y; ROC.best_AUCs(1,4) = ROC.diagquadratic_AUC(i,1);
-        fName = sprintf('classifiers/%s_diagquadratic',name);
+        fName = sprintf('classifiers/s%i_%s_diagquadratic',ses,name);
         save(fName,'classifier');
     end
                                                                                               
     % SVM
     [train_errors.SVM(1,i), test_errors.SVM(1,i), ~, ~,...
-<<<<<<< HEAD
-    ROC_x, ROC_y, ROC.SVM_AUC(i,1),SVMModel] = train_SVM(test, train, labels_test, labels_train);
-    class_name=sprintf('SVMclassifier%i',i);
-    saveCompactModel(SVMModel,class_name);
-=======
      ROC_x, ROC_y, ROC.SVM_AUC(i,1), classifier] = train_SVM(test, train, labels_test, labels_train);
->>>>>>> 9ebe7b51b13f1b35abe2b935b690b8105b474236
     if i == 1 || test_errors.SVM(1,i) < min(test_errors.SVM(1,1:i-1))
         ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y; ROC.best_AUCs(1,5) = ROC.SVM_AUC(i,1);
-        fName = sprintf('classifiers/%s_SVM',name);
+        fName = sprintf('classifiers/s%i_%s_SVM',ses,name);
         save(fName,'classifier');
     end
     
@@ -296,7 +285,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
      ROC_x, ROC_y, ROC.NB_AUC(i,1), classifier] = train_NB(test, train, labels_test, labels_train);
     if i == 1 || test_errors.NB(1,i) < min(test_errors.NB(1,1:i-1))
         ROC.NB_x = ROC_x;  ROC.NB_y = ROC_y; ROC.best_AUCs(1,6) = ROC.NB_AUC(i,1);
-        fName = sprintf('classifiers/%s_NB',name);
+        fName = sprintf('classifiers/s%i_%s_NB',ses,name);
         save(fName,'classifier');
     end
 end
@@ -308,25 +297,35 @@ fprintf('Classifiers trained!\n')
 
 plot_errors(train_errors.linear, train_errors.diaglinear, train_errors.quadratic,...
             train_errors.diagquadratic, train_errors.SVM, train_errors.NB,...
-            'train', name, nfolds);
+            'train', ses, name, nfolds);
         
 plot_errors(test_errors.linear, test_errors.diaglinear, test_errors.quadratic,...
             test_errors.diagquadratic, test_errors.SVM, test_errors.NB,...
-            'test', name, nfolds);
+            'test', ses, name, nfolds);
         
 plot_ROC(ROC.linear_x, ROC.diaglinear_x, ROC.quadratic_x, ROC.diagquadratic_x, ROC.SVM_x, ROC.NB_x,...
-         ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, name, ROC.best_AUCs);
+         ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, ses, name, ROC.best_AUCs);
 
 
 %% load classifiers (just to test out)
 clear;
 
 % load in dataset
+ses = 1;  % session ID
 name = 'Andras';
-fName = sprintf('%s_1_ML.mat',name);
+fName = sprintf('%s_%i_ML.mat',name,ses);
 load(fName);
-% replace 2s with 1s in labels (pool hard & hard with assistance)
-labels(labels == 2) = 1;
+if ses == 1
+    % replace 2s with 1s in labels (pool hard & hard with assistance)
+    labels(labels == 2) = 1;
+else
+    % remove 1s (medium) from labels and features
+    idx = find(labels ~= 1);
+    labels = labels(idx);
+    features = features(idx,:);
+    % replace 2s with 1s in labels
+    labels(labels == 2) = 1;
+end
 
 % call Fisher and dim. reduction
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
@@ -335,8 +334,9 @@ keep = 30;
 features_red = features_reord(:,1:keep);
 
 % load in pretrained classifier
+ses_classifier = 1;  % session ID (it can be different for the classifier)
 classifiertype = 'linear';
-fName = sprintf('classifiers/%s_%s.mat',name,classifiertype);
+fName = sprintf('classifiers/s%i_%s_%s.mat',ses_classifier, name, classifiertype);
 load(fName);
 
 % test classifier
@@ -344,7 +344,8 @@ load(fName);
 test_error = classerror(labels, yhat);
 [ROCx,ROC_y,~,AUC] = perfcurve(labels, scores(:,2), 1);
 
-fprintf('%s: loaded %s classifier - test error: %f, AUC: %f\n',name, classifiertype, test_error, AUC);
+fprintf('%s: session:%i, session:%i %s classifier - test error: %f, AUC: %f\n',name,...
+        ses, ses_classifier, classifiertype, test_error, AUC);
 
 
 
