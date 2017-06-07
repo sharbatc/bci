@@ -40,7 +40,8 @@ Fs = 2048;
 % Fs = Fs/down_;
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'};
 
-name = 'Andras';
+% name = 'Andras';
+name = 'Elisabetta';
 fName = sprintf('%s_2.mat',name);
 load(fName);
 
@@ -53,7 +54,7 @@ fprintf('ses2 data loaded!\n');
 
 
 %% spatial filtering
-% always do spatial filtering first!
+% always do spatial filtering first! not quite sure now
 for i=1:15
    data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'Laplacian');
 end
@@ -70,8 +71,8 @@ fprintf('temporal filtering done!\n')
 
 %% apply ICA
 % it's pretty slow!
-eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-%eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
+% eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
 addpath(sprintf('%s/functions/sigprocfunc',eeglab_path));
 ncomponents = 50; % number of components to keep (change this to avoid complex values)
 for i=1:15
@@ -86,6 +87,7 @@ fprintf('ICA decomposition done!\n')
 %% check correlation: ICA activations with (horizontal & vertical) eye movement
 ses = 2;  % session ID for figures...
 threshold = 2;  % 2*std
+down_ = 8;
 for i=1:15
     [horizontal_corr, vertical_corr] = check_correlation(data.(trials{i}).ICAactivations, data.(trials{i}).eye_channels,...
                                                          down_, threshold, eeglab_path, ses, i, name);
@@ -114,7 +116,8 @@ save(fName, 'data', 'Fs', 'trials');
 clc;
 clear;
 close all;
-name = 'Andras';
+% name = 'Andras';
+name = 'Elisabetta';
 fName = sprintf('%s_2_preprocessed.mat',name);
 load(fName);
 
@@ -169,7 +172,8 @@ clear;
 close all;
 
 ses = 2;  % session ID
-name = 'Andras';
+% name = 'Andras';
+name = 'Elisabetta';
 fName = sprintf('%s_%i_ML.mat',name,ses);
 load(fName);
 
@@ -191,7 +195,8 @@ close all;
 %% Fisher's score:
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, ses, name);
-eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+% eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0'
 plot_fisher_topoplot(labels, features, eeglab_path, ses, name);
 
 
