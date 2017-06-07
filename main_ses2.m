@@ -43,11 +43,11 @@ close all;
 
 mac = 0; % flag for ICA -> change this to 1 on mac!
 Fs = 2048;
-% down_ = 8;
-% Fs = Fs/down_;
+down_ = 8;
+Fs = Fs/down_;
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'};
 
-name = 'Mariana';
+name = 'Elisabetta';
 fName = sprintf('%s_2.mat',name);
 load(fName);
 
@@ -123,7 +123,7 @@ clear;
 close all;
 
 ses = 2;  % session ID
-name = 'Mariana';
+name = 'Elisabetta';
 fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 load(fName);
 
@@ -163,10 +163,17 @@ for i=1:15  % iterates over trials
     end 
 end
 
+% remove samples befor and after 2s of the change point
+changeidx = find(diff(labels)~=0);
+tmp = [-1*ones(size(changeidx,1),1); zeros(size(changeidx,1),1); ones(size(changeidx,1),1); 2*ones(size(changeidx,1),1);];
+rmidx = sort(repmat(changeidx,4,1) + tmp);
+features(rmidx,:) = [];
+labels(rmidx,:) = [];
+
 % save dataset (ready to do machine learning stuffs)
 fName = sprintf('%s_%i_ML.mat',name,ses);
 save(fName,'labels','features','f');
-fprintf('ses2 feature matrix saved!\n')
+fprintf('ses2 feature matrix saved!\n');
 
 
 %% ==================== Machine learning from here ====================
@@ -178,7 +185,7 @@ clear;
 close all;
 
 ses = 2;  % session ID
-name = 'Mariana';
+name = 'Elisabetta';
 fName = sprintf('%s_%i_ML.mat',name,ses);
 load(fName);
 
@@ -201,7 +208,7 @@ close all;
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, ses, name);
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-plot_fisher_topoplot(labels, features, eeglab_path, ses, name);
+%plot_fisher_topoplot(labels, features, eeglab_path, ses, name);
 
 
 %% reduce the number of features (based on Fisher score)
@@ -252,7 +259,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.linear(1,i) < min(test_errors.linear(1,1:i-1))
         ROC.linear_x = ROC_x;  ROC.linear_y = ROC_y; ROC.best_AUCs(1,1) = ROC.linear_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_linear',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
     
 	% diaglinear
@@ -261,7 +268,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.diaglinear(1,i) < min(test_errors.diaglinear(1,1:i-1))
         ROC.diaglinear_x = ROC_x;  ROC.diaglinear_y = ROC_y; ROC.best_AUCs(1,2) = ROC.diaglinear_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_diaglinear',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
     
     % quadratic
@@ -270,7 +277,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.quadratic(1,i) < min(test_errors.quadratic(1,1:i-1))
         ROC.quadratic_x = ROC_x;  ROC.quadratic_y = ROC_y; ROC.best_AUCs(1,3) = ROC.quadratic_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_quadratic',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
     
     % diagquadratic
@@ -279,7 +286,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.diagquadratic(1,i) < min(test_errors.diagquadratic(1,1:i-1))
         ROC.diagquadratic_x = ROC_x;  ROC.diagquadratic_y = ROC_y; ROC.best_AUCs(1,4) = ROC.diagquadratic_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_diagquadratic',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
                                                                                               
     % SVM
@@ -288,7 +295,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.SVM(1,i) < min(test_errors.SVM(1,1:i-1))
         ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y; ROC.best_AUCs(1,5) = ROC.SVM_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_SVM',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end% replace 2s with 1s in labels (pool hard & hard with assistance)
 labels(labels == 2) = 1;
     
@@ -298,7 +305,7 @@ labels(labels == 2) = 1;
     if i == 1 || test_errors.NB(1,i) < min(test_errors.NB(1,1:i-1))
         ROC.NB_x = ROC_x;  ROC.NB_y = ROC_y; ROC.best_AUCs(1,6) = ROC.NB_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_NB',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
 end
 

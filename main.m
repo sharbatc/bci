@@ -173,7 +173,7 @@ clear;
 close all;
 
 ses = 1;  % session ID
-name = 'Andras';
+name = 'Mariana';
 fName = sprintf('%s_%i_ML.mat',name,ses);
 load(fName);
 
@@ -243,7 +243,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.linear(1,i) < min(test_errors.linear(1,1:i-1))
         ROC.linear_x = ROC_x;  ROC.linear_y = ROC_y; ROC.best_AUCs(1,1) = ROC.linear_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_linear',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
     
 	% diaglinear
@@ -252,7 +252,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.diaglinear(1,i) < min(test_errors.diaglinear(1,1:i-1))
         ROC.diaglinear_x = ROC_x;  ROC.diaglinear_y = ROC_y; ROC.best_AUCs(1,2) = ROC.diaglinear_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_diaglinear',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
     
     % quadratic
@@ -261,7 +261,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.quadratic(1,i) < min(test_errors.quadratic(1,1:i-1))
         ROC.quadratic_x = ROC_x;  ROC.quadratic_y = ROC_y; ROC.best_AUCs(1,3) = ROC.quadratic_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_quadratic',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
     
     % diagquadratic
@@ -270,7 +270,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.diagquadratic(1,i) < min(test_errors.diagquadratic(1,1:i-1))
         ROC.diagquadratic_x = ROC_x;  ROC.diagquadratic_y = ROC_y; ROC.best_AUCs(1,4) = ROC.diagquadratic_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_diagquadratic',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
                                                                                               
     % SVM
@@ -279,7 +279,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.SVM(1,i) < min(test_errors.SVM(1,1:i-1))
         ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y; ROC.best_AUCs(1,5) = ROC.SVM_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_SVM',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
     
     % Naive Bayes
@@ -288,7 +288,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     if i == 1 || test_errors.NB(1,i) < min(test_errors.NB(1,1:i-1))
         ROC.NB_x = ROC_x;  ROC.NB_y = ROC_y; ROC.best_AUCs(1,6) = ROC.NB_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_NB',ses,name);
-        save(fName,'classifier');
+        save(fName,'classifier','orderedInd','keep');
     end
 end
 
@@ -307,49 +307,4 @@ plot_errors(test_errors.linear, test_errors.diaglinear, test_errors.quadratic,..
         
 plot_ROC(ROC.linear_x, ROC.diaglinear_x, ROC.quadratic_x, ROC.diagquadratic_x, ROC.SVM_x, ROC.NB_x,...
          ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, ses, name, ROC.best_AUCs);
-
-
-%% load classifiers (just to test out)
-clear;
-
-% load in dataset
-ses = 1;  % session ID
-name = 'Andras';
-fName = sprintf('%s_%i_ML.mat',name,ses);
-load(fName);
-if ses == 1
-    % replace 2s with 1s in labels (pool hard & hard with assistance)
-    labels(labels == 2) = 1;
-else
-    % remove 1s (medium) from labels and features
-    idx = find(labels ~= 1);
-    labels = labels(idx);
-    features = features(idx,:);
-    % replace 2s with 1s in labels
-    labels(labels == 2) = 1;
-end
-
-% call Fisher and dim. reduction
-[orderedPower, orderedInd] = fisher_rankfeat(features, labels);
-features_reord = features(:,orderedInd);
-keep = 30;
-features_red = features_reord(:,1:keep);
-
-% load in pretrained classifier
-ses_classifier = 1;  % session ID (it can be different for the classifier)
-classifiertype = 'linear';
-fName = sprintf('classifiers/s%i_%s_%s.mat',ses_classifier, name, classifiertype);
-load(fName);
-
-% test classifier
-[yhat,scores] = predict(classifier, features_red);
-test_error = classerror(labels, yhat);
-[ROCx,ROC_y,~,AUC] = perfcurve(labels, scores(:,2), 1);
-
-fprintf('%s: session:%i, session:%i %s classifier - test error: %f, AUC: %f\n',name,...
-        ses, ses_classifier, classifiertype, test_error, AUC);
-
-
-
-
 
