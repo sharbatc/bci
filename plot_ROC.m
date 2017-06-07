@@ -32,7 +32,7 @@ xlim([0,1]);
 ylabel('True positive rate');
 ylim([0,1]);
 
-fName = sprintf('pictures/s%i,%s_ROC.png',ses,name);
+fName = sprintf('pictures/s%i_%s_ROC.png',ses,name);
 saveas(gcf, fName);
 
 end
