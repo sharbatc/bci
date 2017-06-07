@@ -36,6 +36,7 @@ set(gca,'fontsize',15);
 title(sprintf('%s: power - easy trials, session:%i',name,ses));
 subplot(1,2,2);
 topoplot((power_hard-mean(power_hard)), 'eeglab_chan64_2.elp');
+set(gca,'fontsize',15);
 
 title(sprintf('%s: power - hard trials, session:%i',name,ses));
 

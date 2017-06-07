@@ -4,7 +4,6 @@ function plot_ROC(fp_linear, fp_diaglinear, fp_quadratic, fp_diagquadratic, fp_S
 % see more: https://en.wikipedia.org/wiki/Receiver_operating_characteristic
 
 figure;
-set(gca,'fontsize',15);
 set(gcf,'units','points','position',[100,100,700,500]);
 
 plot(fp_linear, tp_linear,'LineWidth',2);
@@ -31,6 +30,7 @@ xlabel('False positive rate');
 xlim([0,1]);
 ylabel('True positive rate');
 ylim([0,1]);
+set(gca,'fontsize',15);
 
 fName = sprintf('pictures/s%i_%s_ROC.png',ses,name);
 saveas(gcf, fName);
