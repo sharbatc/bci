@@ -41,9 +41,9 @@ clc;
 clear;
 close all;
 
-mac = 1; % flag for ICA -> change this to 1 on mac!
+mac = 0; % flag for ICA -> change this to 1 on mac!
 
-name = 'Andras';
+name = 'Sharbat';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -55,14 +55,7 @@ fprintf('data loaded!\n');
 % feel free to extend with more fields! (data.* = )
 
 %% Behavioural analysis
-behav_analysis(data, name);  % works only on Elisabetta's
-
-%% look at the signals before any filtering
-trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'}; % stupid MATLAB...
-
-for elecnum=1:64
-   plot_electrode(data.t1.channels(elecnum,:))
-end
+behav_analysis(data, name);
 
 
 %% downsample EEG channels
@@ -73,14 +66,6 @@ for i=1:15
 end
 Fs = Fs/down_;
 fprintf('EEG downsampled by %i!\n',down_)
-
-
-%% spatial filtering
-% always do spatial filtering first!
-for i=1:15
-   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'Laplacian');
-end
-fprintf('spatial filtering done!\n')
 
 
 %% temporal filtering
@@ -124,6 +109,14 @@ for i=1:15
 end
 fprintf('signal recomposed!\n')
 
+
+%% spatial filtering
+for i=1:15
+   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'Laplacian');
+end
+fprintf('spatial filtering done!\n')
+
+
 %% save preprocessed dataset!
 fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 save(fName, 'data', 'Fs', 'trials');
@@ -138,7 +131,7 @@ clear;
 close all;
 
 ses = 1;  % session ID
-name = 'Andras';
+name = 'Elisabetta';
 fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 load(fName);
 
@@ -183,7 +176,7 @@ clear;
 close all;
 
 ses = 1;  % session ID
-name = 'Mariana';
+name = 'Elisabetta';
 fName = sprintf('%s_%i_ML.mat',name,ses);
 load(fName);
 

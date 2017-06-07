@@ -17,10 +17,6 @@ fName = '/home/bandi/EPFL/BCI/ag1_26042017.bdf';
 %fName = '/Users/sharbatc/Academia/Projects/BCI/data/ag2_05042017.bdf';
 %fName = '/home/bandi/EPFL/BCI/ag2_05042017.bdf';
 
-%name = 'Andras';
-%fName = '/Users/sharbatc/Academia/Projects/BCI/data/ag2_05042017.bdf';
-%fName = '/home/bandi/EPFL/BCI/ag2_05042017.bdf';
-
 %name = 'Sharbat';
 %fName = '/Users/sharbatc/Academia/Projects/BCI/data/ad3_05042017.bdf';
 %fName = '/home/bandi/EPFL/BCI/ad3_05042017.bdf';
@@ -47,7 +43,7 @@ down_ = 8;
 Fs = Fs/down_;
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'};
 
-name = 'Elisabetta';
+name = 'Sharbat';
 fName = sprintf('%s_2.mat',name);
 load(fName);
 
@@ -57,14 +53,6 @@ fprintf('ses2 data loaded!\n');
 % struct (called data) with the original header, labels and 15 structs inside (for each trials).
 % trials have 4 matrices, channels, eye_channels, biceps_channels and cleared_trigger (access like: data.t1.channels)
 % feel free to extend with more fields! (data.* = )
-
-
-%% spatial filtering
-% always do spatial filtering first! not quite sure now
-for i=1:15
-   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'Laplacian');
-end
-fprintf('spatial filtering done!\n')
 
 
 %% temporal filtering
@@ -77,8 +65,8 @@ fprintf('temporal filtering done!\n')
 
 %% apply ICA
 % it's pretty slow!
-% eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
+eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+%eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
 addpath(sprintf('%s/functions/sigprocfunc',eeglab_path));
 ncomponents = 50; % number of components to keep (change this to avoid complex values)
 for i=1:15
@@ -108,6 +96,13 @@ for i=1:15
         data.(trials{i}).channels = data.(trials{i}).invW * data.(trials{i}).ICAactivations;
 end
 fprintf('signal recomposed!\n')
+
+
+%% spatial filtering
+for i=1:15
+   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'Laplacian');
+end
+fprintf('spatial filtering done!\n')
 
 
 %% save preprocessed dataset!
@@ -201,7 +196,7 @@ labels(labels == 2) = 1;
 %% plot PSD...
 % plots 10 random easy and 10 random hard trial PSDs for the same electrodes
 features_PSD = features(:,1:end-(64*7)); % 7 is hard coded for 1+6diff bands (see calc_powers.m)
-plot_PSD(labels, features_PSD, f, ses, name)
+plot_PSD(labels, features_PSD, f, ses, name);
 close all;
 
 
@@ -216,7 +211,7 @@ eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
 %% reduce the number of features (based on Fisher score)
 % reorder features
 features_reord = features(:,orderedInd);
-keep = 30;
+keep = 50;
 features_red = features_reord(:,1:keep);
 
 
@@ -298,8 +293,7 @@ for i=1:nfolds  % big CV loop with all the classifiers!
         ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y; ROC.best_AUCs(1,5) = ROC.SVM_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_SVM',ses,name);
         save(fName,'classifier','orderedInd','keep');
-    end% replace 2s with 1s in labels (pool hard & hard with assistance)
-labels(labels == 2) = 1;
+    end
     
     % Naive Bayes
     [train_errors.NB(1,i), test_errors.NB(1,i), ~, ~,...
