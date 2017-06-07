@@ -1,4 +1,4 @@
-% main file for BCI project - 1st session #ames !
+% main file for BCI project - 2nd session #ames !
 
 clc;
 clear;
@@ -7,16 +7,19 @@ close all;
 
 %name = 'Mariana';
 %fName = '/Users/sharbatc/Academia/Projects/BCI/data/ad10_03042017.bdf';
+%Name = '/home/bandi/EPFL/BCI/ad10_03042017.bdf';
 
-%name = 'Elisabetta';
+name = 'Elisabetta';
 %fName = '/Users/sharbatc/Academia/Projects/BCI/data/ag1_26042017.bdf';
+fName = '/home/bandi/EPFL/BCI/ag1_26042017.bdf';
 
-name = 'Andras';
+%name = 'Andras';
 %fName = '/Users/sharbatc/Academia/Projects/BCI/data/ag2_05042017.bdf';
-fName = '/home/bandi/EPFL/BCI/ag2_05042017.bdf';
+%fName = '/home/bandi/EPFL/BCI/ag2_05042017.bdf';
 
 %name = 'Sharbat';
 %fName = '/Users/sharbatc/Academia/Projects/BCI/data/ad3_05042017.bdf';
+%fName = '/home/bandi/EPFL/BCI/ad3_05042017.bdf';
 
 Fs = 2048;
 
@@ -40,7 +43,7 @@ down_ = 8;
 Fs = Fs/down_;
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'};
 
-name = 'Andras';
+name = 'Mariana';
 fName = sprintf('%s_2.mat',name);
 load(fName);
 
@@ -103,7 +106,7 @@ fprintf('signal recomposed!\n')
 
 
 %% save preprocessed dataset!
-fName = sprintf('%s_2_preprocessed.mat',name);
+fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 save(fName, 'data', 'Fs', 'trials');
 
 
@@ -114,8 +117,10 @@ save(fName, 'data', 'Fs', 'trials');
 clc;
 clear;
 close all;
-name = 'Andras';
-fName = sprintf('%s_2_preprocessed.mat',name);
+
+ses = 2;  % session ID
+name = 'Mariana';
+fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 load(fName);
 
 
@@ -155,7 +160,7 @@ for i=1:15  % iterates over trials
 end
 
 % save dataset (ready to do machine learning stuffs)
-fName = sprintf('%s_2_ML.mat',name);
+fName = sprintf('%s_%i_ML.mat',name,ses);
 save(fName,'labels','features','f');
 fprintf('ses2 feature matrix saved!\n')
 
@@ -169,7 +174,7 @@ clear;
 close all;
 
 ses = 2;  % session ID
-name = 'Andras';
+name = 'Mariana';
 fName = sprintf('%s_%i_ML.mat',name,ses);
 load(fName);
 

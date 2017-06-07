@@ -115,7 +115,7 @@ end
 fprintf('signal recomposed!\n')
 
 %% save preprocessed dataset!
-fName = sprintf('%s_1_preprocessed.mat',name);
+fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 save(fName, 'data', 'Fs', 'trials');
 
 
@@ -126,8 +126,10 @@ save(fName, 'data', 'Fs', 'trials');
 clc;
 clear;
 close all;
+
+ses = 1;  % session ID
 name = 'Andras';
-fName = sprintf('%s_1_preprocessed.mat',name);
+fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 load(fName);
 
 
@@ -157,7 +159,7 @@ for i=1:15  % iterates over trials
 end
 
 % save dataset (ready to do machine learning stuffs)
-fName = sprintf('%s_1_ML.mat',name);
+fName = sprintf('%s_%i_ML.mat',name,ses);
 save(fName,'labels','features','f');
 fprintf('feature matrix saved!\n')
 
