@@ -42,10 +42,15 @@ for l = stop_tmp
     stop_idx = [stop_idx, stop(id)];
 end
 
-change_missed_idx = change_missed_tmp(1);
-for m = change_missed_tmp
-	id = find(change_missed == m) + 1;
-	change_missed_idx = [change_missed_idx, change_missed(id)];
+if ~isempty(change_missed_tmp)
+    change_missed_idx = change_missed_tmp(1);   
+    for m = change_missed_tmp
+        id = find(change_missed == m) + 1;
+        change_missed_idx = [change_missed_idx, change_missed(id)];
+    end
+else
+    change_missed_idx = change_missed_tmp;
+    
 end
 
 change_passed_idx = change_passed_tmp(1);

@@ -17,6 +17,10 @@ fName = '/home/bandi/EPFL/BCI/ag1_26042017.bdf';
 %fName = '/Users/sharbatc/Academia/Projects/BCI/data/ag2_05042017.bdf';
 %fName = '/home/bandi/EPFL/BCI/ag2_05042017.bdf';
 
+%name = 'Andras';
+%fName = '/Users/sharbatc/Academia/Projects/BCI/data/ag2_05042017.bdf';
+%fName = '/home/bandi/EPFL/BCI/ag2_05042017.bdf';
+
 %name = 'Sharbat';
 %fName = '/Users/sharbatc/Academia/Projects/BCI/data/ad3_05042017.bdf';
 %fName = '/home/bandi/EPFL/BCI/ad3_05042017.bdf';
@@ -39,8 +43,8 @@ close all;
 
 mac = 0; % flag for ICA -> change this to 1 on mac!
 Fs = 2048;
-down_ = 8;
-Fs = Fs/down_;
+% down_ = 8;
+% Fs = Fs/down_;
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'};
 
 name = 'Mariana';
@@ -136,7 +140,7 @@ for i=1:15  % iterates over trials
     len_trial = floor(size(data.(trials{i}).channels,2)/Fs);
     curr_label = 0;
     
-    trig_144 = find(data.(trials{i}).trigger== 144);
+    trig_144 = find(data.(trials{i}).trigger==144);
     trig_176 = find(data.(trials{i}).trigger==176);
     trig_change = [trig_144, trig_176];
     for k=0:len_trial-1  % iterates over seconds in the trial (1 by 1)
