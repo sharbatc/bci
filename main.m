@@ -204,6 +204,11 @@ features_reord = features(:,orderedInd);
 keep = 30;
 features_red = features_reord(:,1:keep);
 
+fName = sprintf('%s_%i_rankedfeat.mat',name,ses);
+orderedInd1=orderedInd(1:30);
+save(fName,'orderedInd1');
+fprintf('orders from fischer score saved!\n');
+
 
 %% 3D plot of reduced features
 features_plot3d = features_red(:,1:3);

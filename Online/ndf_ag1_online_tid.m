@@ -94,13 +94,17 @@ try
         % spectral filtering
         filt_channels=spatial_filer((eeg_down)', 'Laplacian');
 %         ndf.frame.eeg(:, 1:nBuffCh)=filt_channels';
-        eegFilt=filt_channels';
-        %         [eegFilt, zf] = filter(user.Filter, ndf.frame.eeg(:, 1:nBuffCh), zi);
-%         zi=zf;
+        eegFilt1=filt_channels';
+        eegFilt = filter(user.Filter, eegFilt1);
+        
+        % WE HAVE TO ADD THE CHOSEN ICA COMPONENTS (WHO KNOWS??)
+        
 %         eegFilt = step(user.Filter, ndf.frame.eeg(:, 1:nBuffCh)); % ndf.frame.eeg only has 'totally new' data
         % Pick new data and update buffer (observation (sliding) window for the feature vector)
 %         fprintf('a');
 %         eegFilt(10, :)
+
+
         buffer.eeg = ndf_add2buffer(buffer.eeg, eegFilt); % buffer.eeg usually contain also some 'old' data
         buffer.tri = ndf_add2buffer(buffer.tri, ndf.frame.tri);
 %         buffer.eeg(10, :)
@@ -231,7 +235,7 @@ function [feature, artifact] = fun_extract(user, eeg, baseline)
     relative_powers = calc_powers(f, pxx);
     feature = [reshape(pxx.',1,[]), reshape(relative_powers.',1,[])];
     artifact = [];
-    feature = feature(1:30);
+    feature = feature(user.order.orderedInd1);
     fprintf('feature')
 end
 
