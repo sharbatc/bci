@@ -43,7 +43,7 @@ close all;
 
 mac = 0; % flag for ICA -> change this to 1 on mac!
 
-name = 'Sharbat';
+name = 'Andras';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -53,6 +53,7 @@ fprintf('data loaded!\n');
 % struct (called data) with the original header, labels and 15 structs inside (for each trials).
 % trials have 4 matrices, channels, eye_channels, biceps_channels and cleared_trigger (access like: data.t1.channels)
 % feel free to extend with more fields! (data.* = )
+
 
 %% Behavioural analysis
 behav_analysis(data, name);
@@ -66,6 +67,13 @@ for i=1:15
 end
 Fs = Fs/down_;
 fprintf('EEG downsampled by %i!\n',down_)
+
+
+%% spatial filtering
+for i=1:15
+   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'CAR');
+end
+fprintf('spatial filtering done!\n')
 
 
 %% temporal filtering
@@ -110,13 +118,6 @@ end
 fprintf('signal recomposed!\n')
 
 
-%% spatial filtering
-for i=1:15
-   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'Laplacian');
-end
-fprintf('spatial filtering done!\n')
-
-
 %% save preprocessed dataset!
 fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 save(fName, 'data', 'Fs', 'trials');
@@ -131,7 +132,7 @@ clear;
 close all;
 
 ses = 1;  % session ID
-name = 'Elisabetta';
+name = 'Andras';
 fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 load(fName);
 
@@ -195,13 +196,13 @@ close all;
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, ses, name);
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
-%plot_fisher_topoplot(labels, features, eeglab_path, ses, name);
+plot_fisher_topoplot(labels, features, disc, eeglab_path, ses, name);
 
 
 %% reduce the number of features (based on Fisher score)
 % reorder features
 features_reord = features(:,orderedInd);
-keep = 30;
+keep = 50;
 features_red = features_reord(:,1:keep);
 
 

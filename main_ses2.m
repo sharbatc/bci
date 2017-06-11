@@ -43,7 +43,7 @@ down_ = 8;
 Fs = Fs/down_;
 trials = {'t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 't13', 't14', 't15'};
 
-name = 'Sharbat';
+name = 'Andras';
 fName = sprintf('%s_2.mat',name);
 load(fName);
 
@@ -55,12 +55,19 @@ fprintf('ses2 data loaded!\n');
 % feel free to extend with more fields! (data.* = )
 
 
+%% spatial filtering
+for i=1:15
+   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'CAR');
+end
+fprintf('spatial filtering done!\n')
+
+
 %% temporal filtering
 % this takes some time... (but way less than ICA eg.).
 for i=1:15
    data.(trials{i}).channels = temporal_filter(data.(trials{i}).channels,Fs);
 end
-fprintf('temporal filtering done!\n')
+fprintf('temporal filtering done!\n');
 
 
 %% apply ICA
@@ -75,7 +82,7 @@ for i=1:15
     assert(isreal(data.(trials{i}).ICAactivations) == 1, 'Complex values after ICA, consider using less components!')
     %TODO: add ICA weight saving!
 end
-fprintf('ICA decomposition done!\n')
+fprintf('ICA decomposition done!\n');
 
 
 %% check correlation: ICA activations with (horizontal & vertical) eye movement
@@ -98,13 +105,6 @@ end
 fprintf('signal recomposed!\n')
 
 
-%% spatial filtering
-for i=1:15
-   data.(trials{i}).channels = spatial_filer(data.(trials{i}).channels, 'Laplacian');
-end
-fprintf('spatial filtering done!\n')
-
-
 %% save preprocessed dataset!
 fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 save(fName, 'data', 'Fs', 'trials');
@@ -119,7 +119,7 @@ clear;
 close all;
 
 ses = 2;  % session ID
-name = 'Elisabetta';
+name = 'Andras';
 fName = sprintf('%s_2_preprocessed.mat',name);
 load(fName);
 
@@ -181,7 +181,7 @@ clear;
 close all;
 
 ses = 2;  % session ID
-name = 'Elisabetta';
+name = 'Mariana';
 fName = sprintf('%s_%i_ML.mat',name,ses);
 load(fName);
 
@@ -205,7 +205,7 @@ close all;
 disc = plot_fisher(orderedPower, orderedInd, ses, name);
 eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
 %eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0';
-%plot_fisher_topoplot(labels, features, eeglab_path, ses, name);
+plot_fisher_topoplot(labels, features, disc, eeglab_path, ses, name);
 
 
 %% reduce the number of features (based on Fisher score)
