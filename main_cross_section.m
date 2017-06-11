@@ -5,7 +5,7 @@ clear;
 close all;
 
 % specification:
-name = 'Mariana';
+name = 'Andras';
 ses_data = 2;
 ses_classifier = 1;
 
@@ -76,8 +76,9 @@ test_errors(1,6) = classerror(labels, yhat);
 [ROC.NB_x, ROC.NB_y,~,ROC.AUCs(1,6)] = perfcurve(labels, scores(:,2), 1);
 
 
-plot_ROC(ROC.linear_x, ROC.diaglinear_x, ROC.quadratic_x, ROC.diagquadratic_x, ROC.SVM_x, ROC.NB_x,...
-         ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, ses_classifier, name, ROC.AUCs);
+plot_ROC_cross(ROC.linear_x, ROC.diaglinear_x, ROC.quadratic_x, ROC.diagquadratic_x, ROC.SVM_x, ROC.NB_x,...
+               ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y,...
+               ses_data, ses_classifier, name, ROC.AUCs);
 
 fprintf('%s: session:%i data, session:%i classifier\ntest error - linear: %f\ntest error - diaglinear: %f\ntest error - quadratic: %f\ntest error - diagquadratic: %f\ntest error - SVM: %f\ntest error - NB: %f\n',...
         name, ses_data, ses_classifier, test_errors(1,1), test_errors(1,2), test_errors(1,3), test_errors(1,4), test_errors(1,5), test_errors(1,6));
