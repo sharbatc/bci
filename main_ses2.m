@@ -119,7 +119,7 @@ clear;
 close all;
 
 ses = 2;  % session ID
-name = 'Andras';
+name = 'Mariana';
 fName = sprintf('%s_2_preprocessed.mat',name);
 load(fName);
 
@@ -149,9 +149,10 @@ for i=1:15  % iterates over trials
         labels = [labels; curr_label];
         % calc PSD
         [pxx,f]  = calc_PSD(data.(trials{i}).channels(:,(k*Fs)+1:(k+1)*Fs),Fs);
-        % cut pxx at 50Hz
-        f = f(find(2<=f & f<=45));
-        pxx = pxx(:,f);
+        % cut pxx between 2 and 45 Hz
+        idx = find(2<=f & f<=45);
+        f = f(idx);
+        pxx = pxx(:,idx);
         % calculate abs.power (integral of PSD curve) relative powers of given freq bands
         relative_powers = calc_powers(f, pxx);
         % make a flat vector from 64*44 pxx matrix, add powers (64*7 more features)
