@@ -9,15 +9,15 @@ close all;
 % fName = '/Users/sharbatc/Academia/Projects/BCI/data/BCI2017Competition/subj1.bdf';
 % labels = [0,0,0,1,1,2,2,2,0,0,1,2,1,1,2];
 
-name = 'subj2';
+% name = 'subj2';
 %fName = '/home/bandi/EPFL/BCI/ad10_13032017.bdf'; % Mariana's 1st
-fName = '/Users/sharbatc/Academia/Projects/BCI/data/BCI2017Competition/subj2.bdf';
-labels = [0,2,0,1,2,2,1,1,1,1,0,0,2,0,2];
+% fName = '/Users/sharbatc/Academia/Projects/BCI/data/BCI2017Competition/subj2.bdf';
+% labels = [0,2,0,1,2,2,1,1,1,1,0,0,2,0,2];
 
-% name = 'subj3';
+name = 'subj3';
 % fName = '/home/bandi/EPFL/BCI/ad3_08032017.bdf'; % Sharbat's 1st
-% fName = '/Users/sharbatc/Academia/Projects/BCI/data/BCI2017Competition/subj3.bdf';
-% labels = [1,0,0,2,1,2,0,2,2,1,1,2,1,0,0];
+fName = '/Users/sharbatc/Academia/Projects/BCI/data/BCI2017Competition/subj3.bdf';
+labels = [1,0,0,2,1,2,0,2,2,1,1,2,1,0,0];
 
 Fs = 2048;
 
@@ -37,7 +37,7 @@ close all;
 
 mac = 0; % flag for ICA -> change this to 1 on mac!
 
-name = 'subj2';
+name = 'subj3';
 fName = sprintf('%s_1.mat',name);
 load(fName);
 Fs = 2048;
@@ -123,15 +123,16 @@ clear;
 close all;
 
 ses = 1;  % session ID
-name = 'Mariana';
+name = 'subj3';
 fName = sprintf('%s_%i_preprocessed.mat',name,ses);
 load(fName);
+
 
 
 %% create feature matrix == calc PSDs (+ integral of PSD)
 % note: hard coded for 1sec epoching!
 %TODO: change for ovelapping windows
-
+trial_idx = []; %same size as label
 labels = [];  % will be a column vector; size: 15 * length trial (in sec)
 features = [];  % feature matrix; size: size(labels,1) * (64*size(pxx,2)+64*7)
 
@@ -141,6 +142,7 @@ for i=1:15  % iterates over trials
     for k=0:len_trial-1  % iterates over seconds in the trial (1 by 1)
         % add label for every epoch
         labels = [labels; data.labels(i)];
+        trial_idx = [trial_idx; i];
         % calc PSD
         [pxx,f]  = calc_PSD(data.(trials{i}).channels(:,(k*Fs)+1:(k+1)*Fs),Fs);
         % cut pxx between 2 and 45 Hz
@@ -156,7 +158,7 @@ end
 
 % save dataset (ready to do machine learning stuffs)
 fName = sprintf('%s_%i_ML.mat',name,ses);
-save(fName,'labels','features','f');
+save(fName,'labels','features','f','trial_idx');
 fprintf('feature matrix saved!\n')
 
 
@@ -169,7 +171,7 @@ clear;
 close all;
 
 ses = 1;  % session ID
-name = 'Mariana';
+name = 'subj3';
 fName = sprintf('%s_%i_ML.mat',name,ses);
 load(fName);
 
@@ -187,7 +189,7 @@ close all;
 %% Fisher's score:
 [orderedPower, orderedInd] = fisher_rankfeat(features, labels);
 disc = plot_fisher(orderedPower, orderedInd, ses, name);
-eeglab_path = '/usr/local/MATLAB/R2016a/toolbox/eeglab14_0_0b';
+eeglab_path = '/Applications/MATLAB_R2016b.app/toolbox/eeglab14_1_0b';
 plot_fisher_topoplot(labels, features, disc, eeglab_path, ses, name);
 
 
@@ -206,9 +208,9 @@ plot_features_3D(labels, features_plot3d, ses, name);
 %% train (multiple) classifiers
 clc;
 
-% initialize partitions for 10 fold CV
-nfolds = 10;
-cp = cvpartition_EEG(labels,nfolds);
+% initialize partitions for 15 fold l-o-o validation
+nfolds = 15;
+% cp = cvpartition_EEG(labels,nfolds);
 
 % initialize some containers to store results
 train_errors = struct('linear',ones(1,nfolds),'diaglinear',ones(1,nfolds),'quadratic',ones(1,nfolds),...
@@ -224,18 +226,29 @@ ROC = struct('linear_x',[],'linear_y',[],'linear_AUC',zeros(nfolds,1),...
              'NB_x',[],'NB_y',[],'NB_AUC',zeros(nfolds,1),...
              'best_AUCs',zeros(1,6));
 
+all_labels_test = [];
+all_scores_lda = [];
+all_scores_diaglda = [];
+all_scores_qda = [];
+all_scores_diagqda = [];
+all_scores_svm = [];
+all_scores_nb = [];
+
+         
 for i=1:nfolds  % big CV loop with all the classifiers!  
     fprintf('CV loop: %i/%i\n',i,nfolds);
     
-	test = features_red(cp.test(i,:),:);
-    train = features_red(cp.training(i,:),:);
-	labels_test = labels(cp.test(i,:));
-	labels_train = labels(cp.training(i,:));
+	test = features_red(find(trial_idx==i),:);
+    train = features_red(find(trial_idx~=i),:);
+	labels_test = labels(find(trial_idx==i));
+	labels_train = labels(find(trial_idx~=i));
+    all_labels_test = [all_labels_test; labels_test];
     
     % (no clever MATLAB way to update the struct... so let's do it 1 by 1)...
     % linear
     [train_errors.linear(1,i), test_errors.linear(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.linear_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'linear');
+     ROC_x, ROC_y, ROC.linear_AUC(i,1), classifier, scores_lda] = train_LDQD_comp(test, train, labels_test, labels_train, 'linear');
+    all_scores_lda = [all_scores_lda; scores_lda];
     if i == 1 || test_errors.linear(1,i) < min(test_errors.linear(1,1:i-1))
         ROC.linear_x = ROC_x;  ROC.linear_y = ROC_y; ROC.best_AUCs(1,1) = ROC.linear_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_linear',ses,name);
@@ -244,7 +257,8 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     
 	% diaglinear
     [train_errors.diaglinear(1,i), test_errors.diaglinear(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.diaglinear_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'diaglinear');
+     ROC_x, ROC_y, ROC.diaglinear_AUC(i,1), classifier, scores_diaglda] = train_LDQD_comp(test, train, labels_test, labels_train, 'diaglinear');
+    all_scores_diaglda = [all_scores_diaglda; scores_diaglda];
     if i == 1 || test_errors.diaglinear(1,i) < min(test_errors.diaglinear(1,1:i-1))
         ROC.diaglinear_x = ROC_x;  ROC.diaglinear_y = ROC_y; ROC.best_AUCs(1,2) = ROC.diaglinear_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_diaglinear',ses,name);
@@ -253,7 +267,8 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     
     % quadratic
     [train_errors.quadratic(1,i), test_errors.quadratic(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.quadratic_AUC(i,1), classifier] = train_LDQD(test, train, labels_test, labels_train, 'quadratic');
+     ROC_x, ROC_y, ROC.quadratic_AUC(i,1), classifier, scores_qda] = train_LDQD_comp(test, train, labels_test, labels_train, 'quadratic');
+    all_scores_qda = [all_scores_qda; scores_qda];
     if i == 1 || test_errors.quadratic(1,i) < min(test_errors.quadratic(1,1:i-1))
         ROC.quadratic_x = ROC_x;  ROC.quadratic_y = ROC_y; ROC.best_AUCs(1,3) = ROC.quadratic_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_quadratic',ses,name);
@@ -262,7 +277,8 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     
     % diagquadratic
     [train_errors.diagquadratic(1,i), test_errors.diagquadratic(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1),classifier] = train_LDQD(test, train, labels_test, labels_train, 'diagquadratic');
+     ROC_x, ROC_y, ROC.diagquadratic_AUC(i,1),classifier, scores_diagqda] = train_LDQD_comp(test, train, labels_test, labels_train, 'diagquadratic');
+    all_scores_diagqda = [all_scores_diagqda; scores_diagqda];
     if i == 1 || test_errors.diagquadratic(1,i) < min(test_errors.diagquadratic(1,1:i-1))
         ROC.diagquadratic_x = ROC_x;  ROC.diagquadratic_y = ROC_y; ROC.best_AUCs(1,4) = ROC.diagquadratic_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_diagquadratic',ses,name);
@@ -271,7 +287,8 @@ for i=1:nfolds  % big CV loop with all the classifiers!
                                                                                               
     % SVM
     [train_errors.SVM(1,i), test_errors.SVM(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.SVM_AUC(i,1), classifier] = train_SVM(test, train, labels_test, labels_train);
+     ROC_x, ROC_y, ROC.SVM_AUC(i,1), classifier, scores_svm] = train_SVM_comp(test, train, labels_test, labels_train);
+    all_scores_svm = [all_scores_svm; scores_svm];
     if i == 1 || test_errors.SVM(1,i) < min(test_errors.SVM(1,1:i-1))
         ROC.SVM_x = ROC_x;  ROC.SVM_y = ROC_y; ROC.best_AUCs(1,5) = ROC.SVM_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_SVM',ses,name);
@@ -280,7 +297,8 @@ for i=1:nfolds  % big CV loop with all the classifiers!
     
     % Naive Bayes
     [train_errors.NB(1,i), test_errors.NB(1,i), ~, ~,...
-     ROC_x, ROC_y, ROC.NB_AUC(i,1), classifier] = train_NB(test, train, labels_test, labels_train);
+     ROC_x, ROC_y, ROC.NB_AUC(i,1), classifier, scores_nb] = train_NB_comp(test, train, labels_test, labels_train);
+    all_scores_nb = [all_scores_nb; scores_nb];
     if i == 1 || test_errors.NB(1,i) < min(test_errors.NB(1,1:i-1))
         ROC.NB_x = ROC_x;  ROC.NB_y = ROC_y; ROC.best_AUCs(1,6) = ROC.NB_AUC(i,1);
         fName = sprintf('classifiers/s%i_%s_NB',ses,name);
@@ -289,7 +307,14 @@ for i=1:nfolds  % big CV loop with all the classifiers!
 end
 
 fprintf('Classifiers trained!\n')
+[ROC_lda_x,ROC_lda_y,~,AUC_lda] = perfcurve(all_labels_test,all_scores_lda, 1);
+[ROC_diaglda_x,ROC_diaglda_y,~,AUC_diaglda] = perfcurve(all_labels_test,all_scores_diaglda, 1);
+[ROC_qda_x,ROC_qda_y,~,AUC_qda] = perfcurve(all_labels_test,all_scores_qda, 1);
+[ROC_diagqda_x,ROC_diagqda_y,~,AUC_diagqda] = perfcurve(all_labels_test,all_scores_diagqda, 1);
+[ROC_SVM_x,ROC_SVM_y,~,AUC_SVM] = perfcurve(all_labels_test,all_scores_svm, 1);
+[ROC_NB_x, ROC_NB_y, ~, AUC_NB] = perfcurve(all_labels_test, all_scores_nb, 1);
 
+ROC_best_AUCs = [AUC_lda, AUC_diaglda, AUC_qda, AUC_diagqda, AUC_SVM, AUC_NB];
 
 %% plot out train-test results
 
@@ -301,6 +326,6 @@ plot_errors(test_errors.linear, test_errors.diaglinear, test_errors.quadratic,..
             test_errors.diagquadratic, test_errors.SVM, test_errors.NB,...
             'test', ses, name, nfolds);
         
-plot_ROC(ROC.linear_x, ROC.diaglinear_x, ROC.quadratic_x, ROC.diagquadratic_x, ROC.SVM_x, ROC.NB_x,...
-         ROC.linear_y, ROC.diaglinear_y, ROC.quadratic_y, ROC.diagquadratic_y, ROC.SVM_y, ROC.NB_y, ses, name, ROC.best_AUCs);
+plot_ROC(ROC_lda_x, ROC_diaglda_x, ROC_qda_x, ROC_diagqda_x, ROC_SVM_x, ROC_NB_x,...
+         ROC_lda_y, ROC_diaglda_y, ROC_qda_y, ROC_diagqda_y, ROC_SVM_y, ROC_NB_y, ses, name, ROC_best_AUCs);
 
